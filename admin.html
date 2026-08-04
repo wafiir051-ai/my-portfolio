@@ -42,23 +42,23 @@ textarea{resize:vertical;min-height:80px}
 }
 .btn-primary{background:var(--blue);color:#0A1815}
 .btn-primary:hover{background:var(--blue-hover)}
+.btn-sm{padding:.5rem 1rem;font-size:.82rem}
 .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);padding:.5rem 1rem;font-size:.82rem}
 .btn-danger:hover{background:rgba(232,92,92,.1);color:var(--danger-hover);border-color:var(--danger-hover)}
 .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
 .btn-outline:hover{border-color:var(--text-faint)}
+.btn-outline.btn-sm{padding:.5rem 1rem;font-size:.82rem}
 .card{
   background:linear-gradient(180deg,rgba(19,42,35,.9),rgba(12,28,22,.94));
   border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:1.75rem;
   box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 16px 40px -24px rgba(0,0,0,.7);
   margin-bottom:1.5rem;
 }
-/* ---- Login screen ---- */
 #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
 #loginScreen .card{width:100%;max-width:380px;margin:0}
 #loginScreen h1{font-size:1.5rem;margin-bottom:.35rem}
 #loginScreen p{font-size:.9rem;color:var(--text-faint);margin-bottom:1.5rem}
 #loginError{color:var(--danger);font-size:.85rem;margin-top:.75rem;display:none}
-/* ---- Admin dashboard ---- */
 #adminScreen{display:none}
 .top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
 .top-bar h1{font-size:1.6rem}
@@ -71,16 +71,29 @@ textarea{resize:vertical;min-height:80px}
 .project-item .meta .cat{font-size:.75rem;color:var(--blue);font-weight:600}
 .project-item .meta h3{font-size:1.05rem;margin:.2rem 0 .3rem}
 .project-item .meta p{font-size:.85rem;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item-actions{display:flex;gap:.5rem;flex-shrink:0}
 .empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-faint);font-size:.92rem}
 .status-msg{font-size:.85rem;margin-top:.75rem;display:none}
 .status-msg.success{color:var(--blue);display:block}
 .status-msg.error{color:var(--danger);display:block}
 .hint{font-size:.78rem;color:var(--text-faint);margin-top:.3rem}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:1.5rem;z-index:100;
+}
+.modal-overlay.is-open{display:flex}
+.modal-box{
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  background:linear-gradient(180deg,rgba(19,42,35,.98),rgba(10,24,19,.99));
+  border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:1.75rem;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.8);
+}
+.modal-box h2{font-size:1.2rem;margin-bottom:1.25rem}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.25rem}
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
 <div id="loginScreen">
   <div class="card">
     <h1>Masuk Admin</h1>
@@ -100,7 +113,6 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
-<!-- ADMIN SCREEN -->
 <div id="adminScreen">
   <div class="container">
     <div class="top-bar">
@@ -147,6 +159,44 @@ textarea{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<div class="modal-overlay" id="editModalOverlay">
+  <div class="modal-box">
+    <h2>Edit Proyek</h2>
+    <form id="editForm">
+      <input type="hidden" id="editId">
+      <div class="field">
+        <label for="editTitle">Judul Proyek *</label>
+        <input type="text" id="editTitle" required>
+      </div>
+      <div class="field">
+        <label for="editCategory">Kategori</label>
+        <input type="text" id="editCategory">
+      </div>
+      <div class="field">
+        <label for="editDescription">Deskripsi *</label>
+        <textarea id="editDescription" required></textarea>
+      </div>
+      <div class="field">
+        <label for="editTags">Tags (pisahkan dengan koma)</label>
+        <input type="text" id="editTags">
+      </div>
+      <div class="field">
+        <label for="editLinkUrl">Link Live (kosongkan jika belum live)</label>
+        <input type="url" id="editLinkUrl" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label for="editStatusText">Teks Status (jika belum live)</label>
+        <input type="text" id="editStatusText">
+      </div>
+      <div id="editStatus" class="status-msg"></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="button" id="cancelEditBtn" class="btn btn-outline">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 (function () {
   var SUPABASE_URL = 'https://erfuemuloqptttrbccmw.supabase.co';
@@ -161,6 +211,11 @@ textarea{resize:vertical;min-height:80px}
   var addForm = document.getElementById('addForm');
   var addStatus = document.getElementById('addStatus');
   var projectList = document.getElementById('projectList');
+
+  var editModalOverlay = document.getElementById('editModalOverlay');
+  var editForm = document.getElementById('editForm');
+  var editStatus = document.getElementById('editStatus');
+  var cancelEditBtn = document.getElementById('cancelEditBtn');
 
   function showAdmin(){ loginScreen.style.display = 'none'; adminScreen.style.display = 'block'; loadProjects(); }
   function showLogin(){ loginScreen.style.display = 'flex'; adminScreen.style.display = 'none'; }
@@ -188,6 +243,11 @@ textarea{resize:vertical;min-height:80px}
     sb.auth.signOut().then(showLogin);
   });
 
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   function loadProjects() {
     projectList.innerHTML = '<div class="empty-state">Memuat...</div>';
     sb.from('projects').select('*').order('sort_order', { ascending: true }).then(function (res) {
@@ -203,12 +263,24 @@ textarea{resize:vertical;min-height:80px}
       res.data.forEach(function (p) {
         var item = document.createElement('div');
         item.className = 'project-item';
-        item.innerHTML =
-          '<div class="meta">' +
-            '<div class="cat">' + escapeHtml(p.category || '') + '</div>' +
-            '<h3>' + escapeHtml(p.title) + '</h3>' +
-            '<p>' + escapeHtml(p.description) + '</p>' +
-          '</div>';
+
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML =
+          '<div class="cat">' + escapeHtml(p.category || '') + '</div>' +
+          '<h3>' + escapeHtml(p.title) + '</h3>' +
+          '<p>' + escapeHtml(p.description) + '</p>';
+        item.appendChild(meta);
+
+        var actions = document.createElement('div');
+        actions.className = 'item-actions';
+
+        var editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-outline btn-sm';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', function () { openEditModal(p); });
+        actions.appendChild(editBtn);
+
         var delBtn = document.createElement('button');
         delBtn.className = 'btn btn-danger';
         delBtn.textContent = 'Hapus';
@@ -219,15 +291,12 @@ textarea{resize:vertical;min-height:80px}
             loadProjects();
           });
         });
-        item.appendChild(delBtn);
+        actions.appendChild(delBtn);
+
+        item.appendChild(actions);
         projectList.appendChild(item);
       });
     });
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   addForm.addEventListener('submit', function (e) {
@@ -257,6 +326,54 @@ textarea{resize:vertical;min-height:80px}
       addStatus.textContent = 'Proyek berhasil ditambahkan.';
       addStatus.className = 'status-msg success';
       addForm.reset();
+      loadProjects();
+    });
+  });
+
+  function openEditModal(p) {
+    document.getElementById('editId').value = p.id;
+    document.getElementById('editTitle').value = p.title || '';
+    document.getElementById('editCategory').value = p.category || '';
+    document.getElementById('editDescription').value = p.description || '';
+    document.getElementById('editTags').value = (p.tags || []).join(', ');
+    document.getElementById('editLinkUrl').value = p.link_url || '';
+    document.getElementById('editStatusText').value = p.status_text || '';
+    editStatus.className = 'status-msg';
+    editStatus.style.display = 'none';
+    editModalOverlay.classList.add('is-open');
+  }
+
+  function closeEditModal() {
+    editModalOverlay.classList.remove('is-open');
+  }
+
+  cancelEditBtn.addEventListener('click', closeEditModal);
+  editModalOverlay.addEventListener('click', function (e) {
+    if (e.target === editModalOverlay) closeEditModal();
+  });
+
+  editForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = document.getElementById('editId').value;
+    var tagsRaw = document.getElementById('editTags').value;
+    var tags = tagsRaw ? tagsRaw.split(',').map(function (t) { return t.trim(); }).filter(Boolean) : [];
+
+    var payload = {
+      title: document.getElementById('editTitle').value,
+      category: document.getElementById('editCategory').value,
+      description: document.getElementById('editDescription').value,
+      tags: tags,
+      link_url: document.getElementById('editLinkUrl').value || null,
+      status_text: document.getElementById('editStatusText').value || null
+    };
+
+    sb.from('projects').update(payload).eq('id', id).then(function (res) {
+      if (res.error) {
+        editStatus.textContent = 'Gagal menyimpan perubahan: ' + res.error.message;
+        editStatus.className = 'status-msg error';
+        return;
+      }
+      closeEditModal();
       loadProjects();
     });
   });
