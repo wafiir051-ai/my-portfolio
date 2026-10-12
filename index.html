@@ -2102,5 +2102,49 @@ img,svg,table{max-width:100%}
 </script>
 
 <script src="supabase-projects.js"></script>
+<!-- ASTRA-CHAT-START -->
+<style>
+#astraChat{margin-top:.6rem;border-top:1px solid rgba(255,255,255,.15);padding-top:.5rem}
+#astraLog{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem;font-size:.82rem}
+#astraLog .m{padding:.4rem .6rem;border-radius:10px;max-width:90%;line-height:1.35;word-wrap:break-word}
+#astraLog .u{align-self:flex-end;background:#3ED8A8;color:#04211a}
+#astraLog .b{align-self:flex-start;background:rgba(255,255,255,.12)}
+#astraChips{display:flex;flex-wrap:wrap;gap:.3rem;margin:.5rem 0}
+#astraChips button{font-size:.72rem;padding:.25rem .55rem;border-radius:999px;border:1px solid #3ED8A8;background:transparent;color:inherit;cursor:pointer}
+#astraForm{display:flex;gap:.35rem}
+#astraInput{flex:1;min-width:0;padding:.45rem .6rem;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font-size:.82rem}
+#astraSend{padding:.45rem .7rem;border:0;border-radius:8px;background:#3ED8A8;color:#04211a;font-weight:700;cursor:pointer}
+</style>
+<script>
+(function(){
+  var host=document.getElementById('botBubbleText'); if(!host) return;
+  var box=document.createElement('div'); box.id='astraChat';
+  box.innerHTML='<div id="astraLog"></div><div id="astraChips"></div><div id="astraForm"><input id="astraInput" maxlength="300" placeholder="Tanya tentang Waffir..." autocomplete="off"><button type="button" id="astraSend">Kirim</button></div>';
+  host.parentNode.insertBefore(box, host.nextSibling);
+  var log=box.querySelector('#astraLog'), input=box.querySelector('#astraInput'),
+      send=box.querySelector('#astraSend'), chips=box.querySelector('#astraChips');
+  var history=[], busy=false;
+  function add(role,text){var d=document.createElement('div');d.className='m '+(role==='user'?'u':'b');d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+  async function ask(text){
+    text=(text||'').trim(); if(!text||busy) return;
+    busy=true; add('user',text); input.value='';
+    var wait=add('bot','Astra lagi mikir...');
+    try{
+      var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,history:history})});
+      var data=await r.json(); wait.textContent=data.reply||'Maaf, coba lagi ya!';
+      history.push({role:'user',text:text},{role:'bot',text:wait.textContent});
+    }catch(e){wait.textContent='Astra lagi offline, coba lagi nanti!';}
+    busy=false; log.scrollTop=log.scrollHeight;
+  }
+  ['Siapa Waffir?','Proyek terbarunya?','Skill apa saja?','Cara kontak Waffir'].forEach(function(t){
+    var b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=function(){ask(t)};chips.appendChild(b);
+  });
+  send.onclick=function(){ask(input.value)};
+  input.addEventListener('keydown',function(e){e.stopPropagation();if(e.key==='Enter'){e.preventDefault();ask(input.value);}});
+  ['keyup','keypress'].forEach(function(ev){input.addEventListener(ev,function(e){e.stopPropagation()})});
+})();
+</script>
+<!-- ASTRA-CHAT-END -->
+
 </body>
 </html>
