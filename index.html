@@ -2209,5 +2209,121 @@ img,svg,table{max-width:100%}
 </script>
 <!-- ASTRA-CHAT-END -->
 
+<!-- PORTFOLIO-FX-START -->
+<style>
+#fxBar{position:fixed;top:0;left:0;height:3px;width:100%;z-index:99999;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#3ED8A8,#7aa2ff,#3ED8A8);background-size:200% 100%;animation:fxBarMove 3s linear infinite;box-shadow:0 0 10px rgba(62,216,168,.7);pointer-events:none}
+@keyframes fxBarMove{to{background-position:200% 0}}
+#fxGlow{position:fixed;top:0;left:0;width:380px;height:380px;margin:-190px 0 0 -190px;border-radius:50%;z-index:1;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(62,216,168,.16),transparent 65%);transition:opacity .4s}
+#fxCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:.55}
+.fx-rv{opacity:0;translate:0 30px;scale:.97;transition:opacity .85s ease,translate .85s cubic-bezier(.2,.8,.2,1),scale .85s ease!important}
+.fx-rv.fx-in{opacity:1;translate:0 0;scale:1}
+.fx-spot{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(62,216,168,.2),transparent 70%)}
+.fx-card:hover>.fx-spot{opacity:1}
+.fx-card{will-change:transform}
+@media (prefers-reduced-motion:reduce){#fxBar,#fxGlow,#fxCanvas{display:none}.fx-rv{opacity:1;translate:none;scale:1;transition:none!important}}
+</style>
+<div id="fxBar"></div><div id="fxGlow"></div><canvas id="fxCanvas"></canvas>
+<script>
+(function(){
+  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var fine=matchMedia('(hover:hover) and (pointer:fine)').matches;
+  function inBot(el){return el.closest('#cyberBot,#botBubble,#astraChat,.bot-bubble,nav,header')}
+
+  /* 1. Progress bar atas */
+  var bar=document.getElementById('fxBar');
+  function prog(){var h=document.documentElement;var m=h.scrollHeight-innerHeight;bar.style.transform='scaleX('+(m>0?Math.min(1,scrollY/m):0)+')'}
+  addEventListener('scroll',prog,{passive:true});prog();
+
+  if(reduce) return;
+
+  /* 2. Muncul saat scroll (hanya elemen di bawah layar) */
+  var secs=[].slice.call(document.querySelectorAll('section')).filter(function(s){return !s.querySelector('h1')});
+  var targets=[];
+  secs.forEach(function(s){
+    s.querySelectorAll('h2,h3,p,[class*="card"],[class*="grid"]>*,[class*="list"]>*').forEach(function(el){
+      if(!inBot(el)&&targets.indexOf(el)<0) targets.push(el);
+    });
+  });
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(!e.isIntersecting) return;
+      var el=e.target; io.unobserve(el);
+      var sib=el.parentElement?[].indexOf.call(el.parentElement.children,el):0;
+      el.style.transitionDelay=Math.min(sib,6)*0.09+'s';
+      el.classList.add('fx-in');
+      setTimeout(function(){el.classList.remove('fx-rv','fx-in');el.style.transitionDelay=''},1300+sib*90);
+    });
+  },{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  targets.forEach(function(el){
+    if(el.getBoundingClientRect().top>innerHeight){el.classList.add('fx-rv');io.observe(el)}
+  });
+
+  if(!fine) { startParticles(); return; }
+
+  /* 3. Cahaya mengikuti kursor */
+  var glow=document.getElementById('fxGlow'),gx=0,gy=0,raf=0;
+  addEventListener('pointermove',function(e){
+    gx=e.clientX;gy=e.clientY;glow.style.opacity=1;
+    if(!raf)raf=requestAnimationFrame(function(){glow.style.transform='translate('+gx+'px,'+gy+'px)';raf=0});
+  },{passive:true});
+  document.addEventListener('mouseleave',function(){glow.style.opacity=0});
+
+  /* 4. Kartu: tilt 3D + spotlight */
+  document.querySelectorAll('[class*="card"]').forEach(function(c){
+    if(inBot(c)||c.offsetWidth<140||c.offsetHeight<80) return;
+    c.classList.add('fx-card');
+    if(getComputedStyle(c).position==='static') c.style.position='relative';
+    var sp=document.createElement('span');sp.className='fx-spot';c.appendChild(sp);
+    c.addEventListener('pointermove',function(e){
+      var r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+      c.style.setProperty('--mx',x*100+'%');c.style.setProperty('--my',y*100+'%');
+      c.style.transition='transform .12s ease-out';
+      c.style.transform='perspective(900px) rotateX('+((.5-y)*7)+'deg) rotateY('+((x-.5)*9)+'deg) translateY(-3px)';
+    });
+    c.addEventListener('pointerleave',function(){
+      c.style.transition='transform .5s cubic-bezier(.2,.8,.2,1)';c.style.transform='';
+    });
+  });
+
+  /* 5. Tombol magnetik */
+  document.querySelectorAll('a[class*="btn"],button[class*="btn"]').forEach(function(b){
+    if(inBot(b)) return;
+    b.addEventListener('pointermove',function(e){
+      var r=b.getBoundingClientRect();
+      b.style.translate=((e.clientX-r.left-r.width/2)*.22)+'px '+((e.clientY-r.top-r.height/2)*.35)+'px';
+    });
+    b.addEventListener('pointerleave',function(){b.style.translate=''});
+  });
+
+  startParticles();
+
+  /* 6. Partikel jaring */
+  function startParticles(){
+    var cv=document.getElementById('fxCanvas'),ctx=cv.getContext('2d'),W,H,P=[];
+    function size(){
+      W=cv.width=innerWidth;H=cv.height=innerHeight;
+      var n=Math.min(55,Math.floor(W*H/32000));P=[];
+      for(var i=0;i<n;i++)P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.4+.6});
+    }
+    size();addEventListener('resize',size);
+    (function loop(){
+      if(!document.hidden){
+        ctx.clearRect(0,0,W,H);
+        for(var i=0;i<P.length;i++){
+          var p=P[i];p.x+=p.vx;p.y+=p.vy;
+          if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+          ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fillStyle='rgba(62,216,168,.7)';ctx.fill();
+          for(var j=i+1;j<P.length;j++){
+            var q=P[j],dx=p.x-q.x,dy=p.y-q.y,d=dx*dx+dy*dy;
+            if(d<14400){ctx.strokeStyle='rgba(62,216,168,'+(.22*(1-d/14400))+')';ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke()}
+          }
+        }
+      }
+      requestAnimationFrame(loop);
+    })();
+  }
+})();
+</script>
+<!-- PORTFOLIO-FX-END -->
 </body>
 </html>
