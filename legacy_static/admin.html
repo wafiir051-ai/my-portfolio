@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Kelola Proyek</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0E1F1A; --bg-alt:#0A1815; --surface:#132A23; --surface-alt:#0F231D;
+  --border:#264438; --border-soft:#1C362C; --text:#F2F5F3; --text-dim:#A9BDB4;
+  --text-faint:#78948A; --blue:#3ED8A8; --blue-hover:#5CE6BA; --danger:#E85C5C; --danger-hover:#F07A7A;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --radius:16px; --radius-sm:10px; --ease:cubic-bezier(.28,.11,.32,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:linear-gradient(180deg,#0E1F1A 0%,#08110D 100%);
+  color:var(--text-dim);font-family:var(--font);line-height:1.6;min-height:100vh;
+  -webkit-font-smoothing:antialiased;letter-spacing:-.01em;
+}
+.container{max-width:840px;margin-inline:auto;padding:clamp(1.25rem,4vw,2.5rem)}
+h1,h2,h3{color:var(--text);font-weight:700;letter-spacing:-.03em}
+a{color:var(--blue)}
+label{display:block;font-size:.85rem;font-weight:500;color:var(--text-faint);margin-bottom:.4rem}
+input,textarea{
+  width:100%;background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.7rem .9rem;color:var(--text);font-family:var(--font);font-size:.95rem;letter-spacing:-.005em;
+  transition:border-color .25s var(--ease);
+}
+input:focus,textarea:focus{outline:none;border-color:var(--blue)}
+textarea{resize:vertical;min-height:80px}
+.field{margin-bottom:1.1rem}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;border-radius:999px;
+  font-family:var(--font);font-weight:600;font-size:.92rem;letter-spacing:-.005em;
+  transition:transform .25s var(--ease),background .25s var(--ease);cursor:pointer;border:none;
+}
+.btn-primary{background:var(--blue);color:#0A1815}
+.btn-primary:hover{background:var(--blue-hover)}
+.btn-sm{padding:.5rem 1rem;font-size:.82rem}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);padding:.5rem 1rem;font-size:.82rem}
+.btn-danger:hover{background:rgba(232,92,92,.1);color:var(--danger-hover);border-color:var(--danger-hover)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--text-faint)}
+.btn-outline.btn-sm{padding:.5rem 1rem;font-size:.82rem}
+.card{
+  background:linear-gradient(180deg,rgba(19,42,35,.9),rgba(12,28,22,.94));
+  border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:1.75rem;
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 16px 40px -24px rgba(0,0,0,.7);
+  margin-bottom:1.5rem;
+}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+#loginScreen .card{width:100%;max-width:380px;margin:0}
+#loginScreen h1{font-size:1.5rem;margin-bottom:.35rem}
+#loginScreen p{font-size:.9rem;color:var(--text-faint);margin-bottom:1.5rem}
+#loginError{color:var(--danger);font-size:.85rem;margin-top:.75rem;display:none}
+#adminScreen{display:none}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:1rem}
+.top-bar h1{font-size:1.6rem}
+.project-item{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;
+  padding:1rem 0;border-bottom:1px solid var(--border-soft);
+}
+.project-item:last-child{border-bottom:none}
+.project-item .meta{flex:1;min-width:0}
+.project-item .meta .cat{font-size:.75rem;color:var(--blue);font-weight:600}
+.project-item .meta h3{font-size:1.05rem;margin:.2rem 0 .3rem}
+.project-item .meta p{font-size:.85rem;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.item-actions{display:flex;gap:.5rem;flex-shrink:0}
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-faint);font-size:.92rem}
+.status-msg{font-size:.85rem;margin-top:.75rem;display:none}
+.status-msg.success{color:var(--blue);display:block}
+.status-msg.error{color:var(--danger);display:block}
+.hint{font-size:.78rem;color:var(--text-faint);margin-top:.3rem}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:1.5rem;z-index:100;
+}
+.modal-overlay.is-open{display:flex}
+.modal-box{
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  background:linear-gradient(180deg,rgba(19,42,35,.98),rgba(10,24,19,.99));
+  border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:1.75rem;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.8);
+}
+.modal-box h2{font-size:1.2rem;margin-bottom:1.25rem}
+.modal-actions{display:flex;gap:.75rem;margin-top:1.25rem}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="card">
+    <h1>Masuk Admin</h1>
+    <p>Kelola daftar proyek portofolio kamu.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Masuk</button>
+      <div id="loginError" class="status-msg error"></div>
+    </form>
+  </div>
+</div>
+
+<div id="adminScreen">
+  <div class="container">
+    <div class="top-bar">
+      <h1>Kelola Proyek</h1>
+      <button id="logoutBtn" class="btn btn-outline">Keluar</button>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.15rem;margin-bottom:1.25rem">Tambah Proyek Baru</h2>
+      <form id="addForm">
+        <div class="field">
+          <label for="title">Judul Proyek *</label>
+          <input type="text" id="title" required placeholder="Contoh: Puspita Indah">
+        </div>
+        <div class="field">
+          <label for="category">Kategori</label>
+          <input type="text" id="category" placeholder="Contoh: Website Bisnis">
+        </div>
+        <div class="field">
+          <label for="description">Deskripsi *</label>
+          <textarea id="description" required placeholder="Ceritakan singkat tentang proyek ini..."></textarea>
+        </div>
+        <div class="field">
+          <label for="tags">Tags (pisahkan dengan koma)</label>
+          <input type="text" id="tags" placeholder="Contoh: React, Supabase, Vercel">
+        </div>
+        <div class="field">
+          <label for="linkUrl">Link Live (kosongkan jika belum live)</label>
+          <input type="url" id="linkUrl" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label for="statusText">Teks Status (jika belum live)</label>
+          <input type="text" id="statusText" placeholder="Contoh: Dalam pengembangan — segera di Play Store">
+        </div>
+        <button type="submit" class="btn btn-primary">Tambah Proyek</button>
+        <div id="addStatus" class="status-msg"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1.15rem;margin-bottom:.5rem">Proyek Tersimpan</h2>
+      <div id="projectList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay">
+  <div class="modal-box">
+    <h2>Edit Proyek</h2>
+    <form id="editForm">
+      <input type="hidden" id="editId">
+      <div class="field">
+        <label for="editTitle">Judul Proyek *</label>
+        <input type="text" id="editTitle" required>
+      </div>
+      <div class="field">
+        <label for="editCategory">Kategori</label>
+        <input type="text" id="editCategory">
+      </div>
+      <div class="field">
+        <label for="editDescription">Deskripsi *</label>
+        <textarea id="editDescription" required></textarea>
+      </div>
+      <div class="field">
+        <label for="editTags">Tags (pisahkan dengan koma)</label>
+        <input type="text" id="editTags">
+      </div>
+      <div class="field">
+        <label for="editLinkUrl">Link Live (kosongkan jika belum live)</label>
+        <input type="url" id="editLinkUrl" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label for="editStatusText">Teks Status (jika belum live)</label>
+        <input type="text" id="editStatusText">
+      </div>
+      <div id="editStatus" class="status-msg"></div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        <button type="button" id="cancelEditBtn" class="btn btn-outline">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var SUPABASE_URL = 'https://erfuemuloqptttrbccmw.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZnVlbXVsb3FwdHR0cmJjY213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDk4OTgsImV4cCI6MjEwMTM4NTg5OH0.NRk5Ve1I6s71Zw1RAd10IFrXlI7ivySC3LDeQRb68ko';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var loginScreen = document.getElementById('loginScreen');
+  var adminScreen = document.getElementById('adminScreen');
+  var loginForm = document.getElementById('loginForm');
+  var loginError = document.getElementById('loginError');
+  var logoutBtn = document.getElementById('logoutBtn');
+  var addForm = document.getElementById('addForm');
+  var addStatus = document.getElementById('addStatus');
+  var projectList = document.getElementById('projectList');
+
+  var editModalOverlay = document.getElementById('editModalOverlay');
+  var editForm = document.getElementById('editForm');
+  var editStatus = document.getElementById('editStatus');
+  var cancelEditBtn = document.getElementById('cancelEditBtn');
+
+  function showAdmin(){ loginScreen.style.display = 'none'; adminScreen.style.display = 'block'; loadProjects(); }
+  function showLogin(){ loginScreen.style.display = 'flex'; adminScreen.style.display = 'none'; }
+
+  sb.auth.getSession().then(function (res) {
+    if (res.data.session) showAdmin(); else showLogin();
+  });
+
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    loginError.style.display = 'none';
+    var email = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+    sb.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+      if (res.error) {
+        loginError.textContent = 'Email atau password salah.';
+        loginError.style.display = 'block';
+        return;
+      }
+      showAdmin();
+    });
+  });
+
+  logoutBtn.addEventListener('click', function () {
+    sb.auth.signOut().then(showLogin);
+  });
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function loadProjects() {
+    projectList.innerHTML = '<div class="empty-state">Memuat...</div>';
+    sb.from('projects').select('*').order('sort_order', { ascending: true }).then(function (res) {
+      if (res.error) {
+        projectList.innerHTML = '<div class="empty-state">Gagal memuat proyek: ' + res.error.message + '</div>';
+        return;
+      }
+      if (!res.data.length) {
+        projectList.innerHTML = '<div class="empty-state">Belum ada proyek. Tambahkan lewat form di atas.</div>';
+        return;
+      }
+      projectList.innerHTML = '';
+      res.data.forEach(function (p) {
+        var item = document.createElement('div');
+        item.className = 'project-item';
+
+        var meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML =
+          '<div class="cat">' + escapeHtml(p.category || '') + '</div>' +
+          '<h3>' + escapeHtml(p.title) + '</h3>' +
+          '<p>' + escapeHtml(p.description) + '</p>';
+        item.appendChild(meta);
+
+        var actions = document.createElement('div');
+        actions.className = 'item-actions';
+
+        var editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-outline btn-sm';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', function () { openEditModal(p); });
+        actions.appendChild(editBtn);
+
+        var delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-danger';
+        delBtn.textContent = 'Hapus';
+        delBtn.addEventListener('click', function () {
+          if (!confirm('Hapus proyek "' + p.title + '"?')) return;
+          sb.from('projects').delete().eq('id', p.id).then(function (res) {
+            if (res.error) { alert('Gagal menghapus: ' + res.error.message); return; }
+            loadProjects();
+          });
+        });
+        actions.appendChild(delBtn);
+
+        item.appendChild(actions);
+        projectList.appendChild(item);
+      });
+    });
+  }
+
+  addForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    addStatus.className = 'status-msg';
+    addStatus.style.display = 'none';
+
+    var tagsRaw = document.getElementById('tags').value;
+    var tags = tagsRaw ? tagsRaw.split(',').map(function (t) { return t.trim(); }).filter(Boolean) : [];
+
+    var payload = {
+      title: document.getElementById('title').value,
+      category: document.getElementById('category').value,
+      description: document.getElementById('description').value,
+      tags: tags,
+      link_url: document.getElementById('linkUrl').value || null,
+      status_text: document.getElementById('statusText').value || null,
+      sort_order: 999
+    };
+
+    sb.from('projects').insert(payload).then(function (res) {
+      if (res.error) {
+        addStatus.textContent = 'Gagal menyimpan: ' + res.error.message;
+        addStatus.className = 'status-msg error';
+        return;
+      }
+      addStatus.textContent = 'Proyek berhasil ditambahkan.';
+      addStatus.className = 'status-msg success';
+      addForm.reset();
+      loadProjects();
+    });
+  });
+
+  function openEditModal(p) {
+    document.getElementById('editId').value = p.id;
+    document.getElementById('editTitle').value = p.title || '';
+    document.getElementById('editCategory').value = p.category || '';
+    document.getElementById('editDescription').value = p.description || '';
+    document.getElementById('editTags').value = (p.tags || []).join(', ');
+    document.getElementById('editLinkUrl').value = p.link_url || '';
+    document.getElementById('editStatusText').value = p.status_text || '';
+    editStatus.className = 'status-msg';
+    editStatus.style.display = 'none';
+    editModalOverlay.classList.add('is-open');
+  }
+
+  function closeEditModal() {
+    editModalOverlay.classList.remove('is-open');
+  }
+
+  cancelEditBtn.addEventListener('click', closeEditModal);
+  editModalOverlay.addEventListener('click', function (e) {
+    if (e.target === editModalOverlay) closeEditModal();
+  });
+
+  editForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = document.getElementById('editId').value;
+    var tagsRaw = document.getElementById('editTags').value;
+    var tags = tagsRaw ? tagsRaw.split(',').map(function (t) { return t.trim(); }).filter(Boolean) : [];
+
+    var payload = {
+      title: document.getElementById('editTitle').value,
+      category: document.getElementById('editCategory').value,
+      description: document.getElementById('editDescription').value,
+      tags: tags,
+      link_url: document.getElementById('editLinkUrl').value || null,
+      status_text: document.getElementById('editStatusText').value || null
+    };
+
+    sb.from('projects').update(payload).eq('id', id).then(function (res) {
+      if (res.error) {
+        editStatus.textContent = 'Gagal menyimpan perubahan: ' + res.error.message;
+        editStatus.className = 'status-msg error';
+        return;
+      }
+      closeEditModal();
+      loadProjects();
+    });
+  });
+})();
+</script>
+</body>
+</html>

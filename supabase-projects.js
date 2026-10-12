@@ -23,8 +23,9 @@
     }).join('');
 
     var footerHtml = '';
-    if (p.link_url) {
-      footerHtml = '<a href="' + escapeHtml(p.link_url) + '" target="_blank" rel="noopener" class="project-link">' +
+    var safeLink = p.link_url && /^https?:\/\//i.test(p.link_url.trim()) ? p.link_url.trim() : null;
+    if (safeLink) {
+      footerHtml = '<a href="' + escapeHtml(safeLink) + '" target="_blank" rel="noopener" class="project-link">' +
         escapeHtml(p.link_label || 'Lihat Live') + ' ' + externalLinkSvg + '</a>';
     } else if (p.status_text) {
       footerHtml = '<div class="project-status">' + escapeHtml(p.status_text) + '</div>';
@@ -48,7 +49,7 @@
     }
   })
     .then(function (res) {
-      if (!res.ok) throw new Error('Gagal memuat project (status ' + res.status + ')');
+      if (!res.ok) throw new Error('Status ' + res.status);
       return res.json();
     })
     .then(function (projects) {
@@ -58,11 +59,14 @@
 
       var revealEls = grid.querySelectorAll('.reveal');
       if ('IntersectionObserver' in window) {
-        var revealObserver = new IntersectionObserver(function (entries) {
+        var revealObserver = new IntersectionObserver(function (entries, observer) {
           entries.forEach(function (entry) {
-            entry.target.classList.toggle('is-visible', entry.isIntersecting);
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
           });
-        }, { threshold: 0.15 });
+        }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
         revealEls.forEach(function (el) { revealObserver.observe(el); });
       } else {
         revealEls.forEach(function (el) { el.classList.add('is-visible'); });
@@ -98,7 +102,7 @@
         });
       }
     })
-    .catch(function (err) {
-      console.error('Supabase projects fetch error:', err);
+    .catch(function () {
+      // Supabase is unreachable/offline — cleanly preserve static portfolio projects
     });
 })();

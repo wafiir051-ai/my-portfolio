@@ -56,9 +56,6 @@ a{color:inherit;text-decoration:none}
 ul{list-style:none}
 button{font:inherit;cursor:pointer;background:none;border:none;color:inherit}
 main section[id]{scroll-margin-top:90px}
-@media (prefers-reduced-motion:no-preference){
-  main section{transform:scale(var(--scroll-scale,1));transition:transform .3s linear;will-change:transform}
-}
 :focus-visible{outline:2px solid var(--blue);outline-offset:3px;border-radius:4px}
 
 /* ===================== BASE / UTIL ===================== */
@@ -115,12 +112,12 @@ h2{font-size:clamp(2rem,1.3vw + 1.6rem,3.1rem);margin-bottom:.75rem;letter-spaci
 /* Staggered delays for grids of cards - creates a cascading 3D entrance */
 @media (prefers-reduced-motion:no-preference){
   .projects-grid .reveal:nth-child(1),.services-grid .reveal:nth-child(1),.skills-grid .reveal:nth-child(1){transition-delay:0s}
-  .projects-grid .reveal:nth-child(2),.services-grid .reveal:nth-child(2),.skills-grid .reveal:nth-child(2){transition-delay:.12s}
-  .projects-grid .reveal:nth-child(3),.services-grid .reveal:nth-child(3),.skills-grid .reveal:nth-child(3){transition-delay:.24s}
-  .projects-grid .reveal:nth-child(4),.services-grid .reveal:nth-child(4),.skills-grid .reveal:nth-child(4){transition-delay:.36s}
-  .projects-grid .reveal:nth-child(5){transition-delay:.48s}
-  .projects-grid .reveal:nth-child(6){transition-delay:.6s}
-  .projects-grid .reveal:nth-child(7){transition-delay:.72s}
+  .projects-grid .reveal:nth-child(2),.services-grid .reveal:nth-child(2),.skills-grid .reveal:nth-child(2){transition-delay:.08s}
+  .projects-grid .reveal:nth-child(3),.services-grid .reveal:nth-child(3),.skills-grid .reveal:nth-child(3){transition-delay:.16s}
+  .projects-grid .reveal:nth-child(4),.services-grid .reveal:nth-child(4),.skills-grid .reveal:nth-child(4){transition-delay:.24s}
+  .projects-grid .reveal:nth-child(5){transition-delay:.32s}
+  .projects-grid .reveal:nth-child(6){transition-delay:.4s}
+  .projects-grid .reveal:nth-child(7){transition-delay:.48s}
 }
 
 /* ===================== NAV ===================== */
@@ -1192,7 +1189,7 @@ img,svg,table{max-width:100%}
     </div>
     <div class="hero-visual">
       <div class="hero-photo-frame">
-        <img src="malioboro.jpg" alt="Waffir Hasan Alkamiil di Jalan Malioboro, Yogyakarta" width="900" height="1200">
+        <img src="malioboro.jpg" alt="Waffir Hasan Alkamiil di Jalan Malioboro, Yogyakarta" width="900" height="1200" fetchpriority="high" loading="eager">
         <div class="hero-photo-caption">
           <span><span class="status-dot" aria-hidden="true" style="display:inline-block;margin-right:.4rem;vertical-align:middle"></span>Waffir Hasan Alkamiil</span>
           <strong>Subang, ID</strong>
@@ -1647,11 +1644,14 @@ img,svg,table{max-width:100%}
 
   var revealEls = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window){
-    var revealObserver = new IntersectionObserver(function(entries){
+    var revealObserver = new IntersectionObserver(function(entries, observer){
       entries.forEach(function(entry){
-        entry.target.classList.toggle('is-visible', entry.isIntersecting);
+        if (entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
       });
-    }, {threshold:0.15});
+    }, {threshold:0.12, rootMargin:'0px 0px -30px 0px'});
     revealEls.forEach(function(el){ revealObserver.observe(el); });
   } else {
     revealEls.forEach(function(el){ el.classList.add('is-visible'); });
@@ -1732,41 +1732,33 @@ img,svg,table{max-width:100%}
     });
   }
 
-  /* ===================== SCROLL-BASED 3D DEPTH (hero tilt + section scale) ===================== */
+  /* ===================== SCROLL-BASED 3D DEPTH (hero visual depth) ===================== */
   if (!reduceMotion){
-    var scrollDepthTargets = Array.prototype.slice.call(document.querySelectorAll('main section'));
     var heroVisualEl = document.querySelector('.hero-visual');
-    var ticking = false;
+    var heroDepthTicking = false;
 
-    function updateScrollDepth(){
-      ticking = false;
+    function updateHeroScrollDepth(){
+      heroDepthTicking = false;
       var vh = window.innerHeight;
 
-      // Hero visual: pronounced 3D rotation tied to scroll position within the first viewport
+      // Hero visual: smooth 3D rotation tied to scroll position within the first viewport
       if (heroVisualEl){
-        var heroScrollProgress = Math.min(Math.max(window.scrollY / vh, 0), 1);
-        heroVisualEl.style.transform = 'rotateX(' + (heroScrollProgress * 26) + 'deg) rotateZ(' + (heroScrollProgress * -4) + 'deg) translateY(' + (heroScrollProgress * -46) + 'px) scale(' + (1 - heroScrollProgress * 0.1) + ')';
-        heroVisualEl.style.opacity = String(1 - heroScrollProgress * 0.6);
+        var sy = window.scrollY;
+        if (sy <= vh * 1.2){
+          var heroScrollProgress = Math.min(Math.max(sy / vh, 0), 1);
+          heroVisualEl.style.transform = 'rotateX(' + (heroScrollProgress * 26) + 'deg) rotateZ(' + (heroScrollProgress * -4) + 'deg) translateY(' + (heroScrollProgress * -46) + 'px) scale(' + (1 - heroScrollProgress * 0.1) + ')';
+          heroVisualEl.style.opacity = String(1 - heroScrollProgress * 0.6);
+        }
       }
-
-      // Sections: pronounced scale + depth as they cross the viewport center, capped to avoid layout jank
-      scrollDepthTargets.forEach(function(section){
-        var rect = section.getBoundingClientRect();
-        var center = rect.top + rect.height / 2;
-        var distanceFromCenter = Math.abs(center - vh / 2);
-        var normalized = Math.min(distanceFromCenter / vh, 1);
-        var scale = 1 - normalized * 0.055;
-        section.style.setProperty('--scroll-scale', scale.toFixed(4));
-      });
     }
 
     window.addEventListener('scroll', function(){
-      if (!ticking){
-        requestAnimationFrame(updateScrollDepth);
-        ticking = true;
+      if (!heroDepthTicking){
+        requestAnimationFrame(updateHeroScrollDepth);
+        heroDepthTicking = true;
       }
     }, {passive:true});
-    updateScrollDepth();
+    updateHeroScrollDepth();
   }
 
   /* ===================== CYBER-BOT INTERACTIVE COMPANION CONTROLLER ===================== */
@@ -1827,15 +1819,18 @@ img,svg,table{max-width:100%}
     var currentSection = 'top';
     var isManualDialog = false;
     var manualTimeout = null;
+    var dialogFadeTimeout = null;
 
     function updateDialog(key){
       if (isManualDialog) return;
+      if (currentSection === key && bubbleBadge && bubbleBadge.textContent) return;
       var data = sectionData[key] || sectionData['top'];
       currentSection = key;
       if (bubbleBadge) bubbleBadge.textContent = data.badge;
       if (bubbleText){
         bubbleText.style.opacity = '0';
-        setTimeout(function(){
+        clearTimeout(dialogFadeTimeout);
+        dialogFadeTimeout = setTimeout(function(){
           bubbleText.textContent = data.text;
           bubbleText.style.opacity = '1';
         }, 140);
@@ -1981,7 +1976,27 @@ img,svg,table{max-width:100%}
       progressBar.style.strokeDashoffset = circumference.toFixed(2);
     }
 
+    // Cache ambient elements once at startup for silky 60/120fps performance
+    var rawFlyEls = document.querySelectorAll('.fly-el');
+    var flyItems = [];
+    rawFlyEls.forEach(function(el){
+      flyItems.push({
+        el: el,
+        spd: parseFloat(el.getAttribute('data-speed')) || 0.1,
+        rot: parseFloat(el.getAttribute('data-rot')) || 0
+      });
+    });
+
+    var botScrollTicking = false;
+    function requestBotScrollUpdate(){
+      if (!botScrollTicking){
+        botScrollTicking = true;
+        requestAnimationFrame(handleBotScroll);
+      }
+    }
+
     function handleBotScroll(){
+      botScrollTicking = false;
       var now = Date.now();
       var dt = Math.max(now - lastScrollTime, 16);
       var sy = window.scrollY;
@@ -2009,21 +2024,19 @@ img,svg,table{max-width:100%}
         targetThrust = 1;
       }
 
-      // Rich parallax on all flying ambient elements
-      var flyEls = document.querySelectorAll('.fly-el');
+      // Rich parallax on all flying ambient elements (zero DOM query, throttled to RAF)
       var absV = Math.abs(scrollVelocity);
-      var burstFactor = Math.min(absV * 12, 1); // 0-1 burst intensity
-      flyEls.forEach(function(el){
-        var spd = parseFloat(el.getAttribute('data-speed')) || 0.1;
-        var rot = parseFloat(el.getAttribute('data-rot')) || 0;
-        var yOff = sy * spd;
-        var xScatter = burstFactor * spd * 120; // scatter sideways on fast scroll
-        var angle = sy * rot;
-        var sc = 1 + burstFactor * 0.3 * Math.abs(spd);
-        var op = 0.4 + burstFactor * 0.5;
-        el.style.transform = 'translateY(' + yOff.toFixed(1) + 'px) translateX(' + xScatter.toFixed(1) + 'px) rotate(' + angle.toFixed(1) + 'deg) scale(' + sc.toFixed(3) + ')';
-        el.style.opacity = Math.min(op, 1).toFixed(2);
-      });
+      var burstFactor = Math.min(absV * 12, 1);
+      for (var i = 0; i < flyItems.length; i++){
+        var item = flyItems[i];
+        var yOff = sy * item.spd;
+        var xScatter = burstFactor * item.spd * 120;
+        var angle = sy * item.rot;
+        var sc = 1 + burstFactor * 0.3 * Math.abs(item.spd);
+        var op = Math.min(0.4 + burstFactor * 0.5, 1);
+        item.el.style.transform = 'translateY(' + yOff.toFixed(1) + 'px) translateX(' + xScatter.toFixed(1) + 'px) rotate(' + angle.toFixed(1) + 'deg) scale(' + sc.toFixed(3) + ')';
+        item.el.style.opacity = op.toFixed(2);
+      }
     }
 
     function renderBotPhysics(){
@@ -2043,7 +2056,7 @@ img,svg,table{max-width:100%}
       requestAnimationFrame(renderBotPhysics);
     }
 
-    window.addEventListener('scroll', handleBotScroll, { passive: true });
+    window.addEventListener('scroll', requestBotScrollUpdate, { passive: true });
     handleBotScroll();
 
     // Mouse Cursor Eye Tracking
@@ -2072,7 +2085,6 @@ img,svg,table{max-width:100%}
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-projects.js"></script>
 </body>
 </html>
