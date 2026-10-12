@@ -2370,5 +2370,31 @@ img,svg,table{max-width:100%}
 })();
 </script>
 <!-- AUTO-AGE-END -->
+<script>/* astra-hero */
+(function(){
+  var close=document.getElementById('botCloseBtn'),
+      toggle=document.getElementById('botBubbleToggle'),
+      bub=document.getElementById('botBubble');
+  if(!close||!toggle||!bub) return;
+  var autoClosed=false, touched=false;
+  function open_(){
+    var s=getComputedStyle(bub), r=bub.getBoundingClientRect();
+    return s.display!=='none' && s.visibility!=='hidden' && parseFloat(s.opacity)>0.1 && r.height>20;
+  }
+  [close,toggle,document.getElementById('cyberBot')].forEach(function(el){
+    if(el) el.addEventListener('click',function(e){ if(e.isTrusted) touched=true; });
+  });
+  setTimeout(function(){
+    if(window.scrollY<200 && !touched && open_()){ autoClosed=true; close.click(); }
+  },900);
+  window.addEventListener('scroll',function(){
+    if(autoClosed && !touched && window.scrollY>450){
+      autoClosed=false;
+      if(!open_()) toggle.click();
+    }
+  },{passive:true});
+})();
+</script>
+
 </body>
 </html>
