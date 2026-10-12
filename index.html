@@ -2245,7 +2245,7 @@ img,svg,table{max-width:100%}
   var targets=[];
   secs.forEach(function(s){
     s.querySelectorAll('h2,h3,p,[class*="card"],[class*="grid"]>*,[class*="list"]>*').forEach(function(el){
-      if(!inBot(el)&&targets.indexOf(el)<0) targets.push(el);
+      if(!inBot(el)&&!el.closest('.reveal')&&targets.indexOf(el)<0) targets.push(el);
     });
   });
   var io=new IntersectionObserver(function(es){
@@ -2273,7 +2273,7 @@ img,svg,table{max-width:100%}
   document.addEventListener('mouseleave',function(){glow.style.opacity=0});
 
   /* 4. Kartu: tilt 3D + spotlight */
-  document.querySelectorAll('[class*="card"]').forEach(function(c){
+  document.querySelectorAll('.project-card,.service-card').forEach(function(c){
     if(inBot(c)||c.offsetWidth<140||c.offsetHeight<80) return;
     c.classList.add('fx-card');
     if(getComputedStyle(c).position==='static') c.style.position='relative';
