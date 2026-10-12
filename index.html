@@ -2329,5 +2329,31 @@ img,svg,table{max-width:100%}
 })();
 </script>
 <!-- PORTFOLIO-FX-END -->
+<!-- AUTO-AGE-START -->
+<script>
+(function(){
+  var b=new Date(2010,4,20),n=new Date();
+  var age=n.getFullYear()-b.getFullYear();
+  if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))age--;
+  var re=/\b16(\s*)(tahun|th)\b|\b(usia|umur)(\s+)16\b/gi;
+  function fix(t){return t.replace(re,function(m,a,b,c,d){return b?age+a+b:c+d+age})}
+  function walk(root){
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(x){
+      var p=x.parentNode&&x.parentNode.nodeName;
+      return (p==='SCRIPT'||p==='STYLE')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}});
+    var list=[],x;while(x=w.nextNode())list.push(x);
+    list.forEach(function(t){var v=fix(t.nodeValue);if(v!==t.nodeValue)t.nodeValue=v});
+  }
+  function run(){
+    walk(document.body);
+    var m=document.querySelector('meta[name="description"]');
+    if(m)m.content=fix(m.content);
+    document.title=fix(document.title);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+  new MutationObserver(function(){walk(document.body)}).observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
+</script>
+<!-- AUTO-AGE-END -->
 </body>
 </html>
