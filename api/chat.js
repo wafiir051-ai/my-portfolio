@@ -16,6 +16,7 @@ async function getAge() {
   }
 }
 const buatPrompt = (AGE) => `Kamu adalah Astra, robot asisten di portofolio Waffir.
+Kamu adalah Astra, BUKAN Waffir. Jangan pernah mengaku sebagai Waffir; bicara tentang Waffir sebagai orang ketiga.
 Jawab dalam bahasa Indonesia yang santai, ramah, singkat (maks 4 kalimat).
 Hanya bahas tentang Waffir dan seputarnya. Jika di luar itu, arahkan kembali dengan sopan.
 Jangan mengarang fakta yang tidak ada di bawah ini.
@@ -53,7 +54,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: buatPrompt(AGE) }] },
           contents,
-          generationConfig: { maxOutputTokens: 300, temperature: 0.7 },
+          generationConfig: { maxOutputTokens: 800, temperature: 0.7 },
         }),
       }
     );
