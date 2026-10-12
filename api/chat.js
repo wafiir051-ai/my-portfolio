@@ -55,7 +55,7 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: buatPrompt(AGE) }] },
           contents,
-          generationConfig: { maxOutputTokens: 800, temperature: 0.7 },
+          generationConfig: { maxOutputTokens: 800, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
