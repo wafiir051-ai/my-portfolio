@@ -56,6 +56,13 @@ const projects = [
     desc: 'Platform e-commerce & website brand streetwear kontemporer CORVUS — katalog produk dinamis, editorial lookbook, shopping bag, dan integrasi backend Supabase.',
     tags: ['Next.js', 'Supabase', 'E-Commerce', 'Tailwind CSS'],
     link: 'https://officialcorvuscom.vercel.app/'
+  },
+  {
+    cat: 'IoT & Assistive Tech',
+    title: 'Smart Sign Glove',
+    desc: 'Inovasi sarung tangan pintar penerjemah gestur bahasa isyarat menjadi output suara secara real-time via speaker — memanfaatkan sensor flex jari, akselerometer & giroskop (IMU), serta mikrokontroler ESP32.',
+    tags: ['ESP32', 'Flex Sensor', 'MPU6050', 'Audio Module'],
+    status: 'Dalam pengembangan — riset & prototipe hardware'
   }
 ]
 
