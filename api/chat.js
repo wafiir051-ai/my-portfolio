@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { message, history = [] } = req.body || {};
-  const AGE = (await getAge()) ?? "sekitar 16";
+  const AGE = (await getAge()) ?? "masih remaja";
   if (!message || typeof message !== "string" || message.length > 500)
     return res.status(400).json({ error: "Pesan tidak valid" });
 
