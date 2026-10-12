@@ -2105,56 +2105,59 @@ img,svg,table{max-width:100%}
 <!-- ASTRA-CHAT-START -->
 <style>
 @property --a{syntax:'<angle>';initial-value:0deg;inherits:false}
-#astraChat{position:relative;overflow:hidden;margin-top:.8rem;padding:.7rem;display:flex;flex-direction:column;gap:.65rem;border-radius:18px;border:1px solid rgba(62,216,168,.18);background:linear-gradient(135deg,rgba(62,216,168,.12),rgba(90,120,255,.09),rgba(62,216,168,.12));background-size:300% 300%;animation:amAurora 9s ease infinite}
-#astraChat::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background-image:radial-gradient(circle,rgba(62,216,168,.55) 1px,transparent 1.6px),radial-gradient(circle,rgba(255,255,255,.35) 1px,transparent 1.6px);background-size:44px 44px,71px 71px;animation:amDrift 14s linear infinite}
+#astraChat{position:relative;overflow:hidden;margin-top:.7rem;padding:.6rem;display:flex;flex-direction:column;gap:.55rem;border-radius:16px;border:1px solid rgba(62,216,168,.18);background:linear-gradient(135deg,rgba(62,216,168,.1),rgba(90,120,255,.07),rgba(62,216,168,.1));background-size:300% 300%;animation:amAurora 9s ease infinite}
+#astraChat::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background-image:radial-gradient(circle,rgba(62,216,168,.6) 1px,transparent 1.6px);background-size:46px 46px;animation:amDrift 16s linear infinite}
 #astraChat>*{position:relative;z-index:1}
 @keyframes amAurora{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-@keyframes amDrift{from{background-position:0 0,0 0}to{background-position:0 -88px,0 -142px}}
-#astraLog{max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:.6rem;scrollbar-width:thin;scrollbar-color:rgba(62,216,168,.35) transparent}
+@keyframes amDrift{from{background-position:0 0}to{background-position:0 -92px}}
+#astraLog{max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:.65rem;padding:8px 6px 6px 8px;margin:-8px -6px -6px -8px;scrollbar-width:thin;scrollbar-color:rgba(62,216,168,.35) transparent}
 #astraLog:empty{display:none}
-.am{display:flex;gap:.5rem;align-items:flex-end;animation:amIn .45s cubic-bezier(.34,1.56,.64,1)}
+.am{display:flex;gap:.5rem;align-items:flex-start;animation:amIn .45s cubic-bezier(.34,1.56,.64,1)}
 .am.u{flex-direction:row-reverse;animation-name:amInR}
-@keyframes amIn{from{opacity:0;transform:translate(-14px,10px) scale(.92)}to{opacity:1;transform:none}}
-@keyframes amInR{from{opacity:0;transform:translate(14px,10px) scale(.92)}to{opacity:1;transform:none}}
-.am .av{position:relative;width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:.85rem;background:linear-gradient(135deg,#3ED8A8,#1c8f6c);box-shadow:0 0 14px rgba(62,216,168,.45);animation:amFloat 3s ease-in-out infinite}
-.am .av::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid #3ED8A8;animation:amRing 2.4s ease-out infinite}
-.am .av.talk{animation:amFloat .6s ease-in-out infinite}
-@keyframes amFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@keyframes amRing{from{transform:scale(1);opacity:.7}to{transform:scale(1.9);opacity:0}}
-.am .tx{padding:.55rem .8rem;max-width:85%;font-size:.84rem;line-height:1.5;border-radius:16px 16px 16px 4px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(6px);word-wrap:break-word}
-.am.u .tx{border-radius:16px 16px 4px 16px;background:linear-gradient(135deg,#3ED8A8,#2fb88d);color:#04211a;border:0;font-weight:500;box-shadow:0 4px 14px rgba(62,216,168,.3)}
+@keyframes amIn{from{opacity:0;transform:translate(-12px,8px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes amInR{from{opacity:0;transform:translate(12px,8px) scale(.94)}to{opacity:1;transform:none}}
+.am .av{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#6af0c8,#2fb88d);animation:amFloat 3s ease-in-out infinite,amHalo 2.6s ease-out infinite}
+.am .av svg{display:block}
+.am .av .eye{transform-box:fill-box;transform-origin:center;animation:amEye 4.2s infinite}
+.am .av.talk{animation:amFloat .6s ease-in-out infinite,amHalo 1.2s ease-out infinite}
+@keyframes amFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes amHalo{0%{box-shadow:0 0 0 0 rgba(62,216,168,.55)}100%{box-shadow:0 0 0 6px rgba(62,216,168,0)}}
+@keyframes amEye{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.am .tx{padding:.5rem .7rem;max-width:calc(100% - 40px);font-size:.8rem;line-height:1.5;border-radius:4px 14px 14px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(6px);word-wrap:break-word}
+.am.u .tx{max-width:88%;border-radius:14px 4px 14px 14px;background:linear-gradient(135deg,#3ED8A8,#2fb88d);color:#04211a;border:0;font-weight:500;box-shadow:0 4px 14px rgba(62,216,168,.28)}
 .am .tx strong{color:#3ED8A8}.am.u .tx strong{color:inherit}
 .caret{display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:#3ED8A8;animation:amBlink .8s steps(1) infinite}
 @keyframes amBlink{50%{opacity:0}}
-.dots{display:inline-flex;gap:4px;padding:.2rem 0}
+.dots{display:inline-flex;gap:4px;padding:.25rem 0}
 .dots i{width:6px;height:6px;border-radius:50%;background:#3ED8A8;animation:amDot 1.1s infinite ease-in-out}
 .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
-@keyframes amDot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-5px);opacity:1}}
-#astraChips{display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+@keyframes amDot{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-4px);opacity:1}}
+#astraChips{display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:none;padding:2px 0}
 #astraChips::-webkit-scrollbar{display:none}
-#astraChips button{position:relative;overflow:hidden;flex:none;font-size:.74rem;padding:.35rem .7rem;border-radius:999px;border:1px solid rgba(62,216,168,.4);background:rgba(62,216,168,.08);color:inherit;cursor:pointer;opacity:0;animation:amChip .5s ease forwards;transition:.25s}
-#astraChips button::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:amShine 3.5s ease-in-out infinite}
-#astraChips button:hover{background:rgba(62,216,168,.25);transform:translateY(-2px);box-shadow:0 6px 14px rgba(62,216,168,.25)}
-@keyframes amChip{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#astraChips button{position:relative;overflow:hidden;flex:none;font-size:.72rem;padding:.32rem .65rem;border-radius:999px;border:1px solid rgba(62,216,168,.4);background:rgba(62,216,168,.08);color:inherit;cursor:pointer;opacity:0;animation:amChip .5s ease forwards;transition:.25s}
+#astraChips button::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent);transform:skewX(-20deg);animation:amShine 3.5s ease-in-out infinite}
+#astraChips button:hover{background:rgba(62,216,168,.25);transform:translateY(-2px)}
+@keyframes amChip{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes amShine{0%,60%{left:-60%}100%{left:130%}}
-#astraForm{display:flex;align-items:center;gap:.4rem;padding:.3rem .3rem .3rem .9rem;border-radius:999px;border:1.5px solid transparent;background:linear-gradient(rgba(8,24,19,.95),rgba(8,24,19,.95)) padding-box,conic-gradient(from var(--a),rgba(255,255,255,.12) 0 55%,#3ED8A8 80%,rgba(255,255,255,.12) 100%) border-box;animation:amSpin 4s linear infinite;transition:box-shadow .3s}
+#astraForm{display:flex;align-items:center;gap:.4rem;padding:.25rem .25rem .25rem .8rem;border-radius:999px;border:1.5px solid transparent;background:linear-gradient(rgba(8,24,19,.95),rgba(8,24,19,.95)) padding-box,conic-gradient(from var(--a),rgba(255,255,255,.12) 0 55%,#3ED8A8 80%,rgba(255,255,255,.12) 100%) border-box;animation:amSpin 4s linear infinite;transition:box-shadow .3s}
 @keyframes amSpin{to{--a:360deg}}
-#astraForm:focus-within{box-shadow:0 0 0 4px rgba(62,216,168,.15),0 0 22px rgba(62,216,168,.25)}
-#astraInput{flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font-size:.84rem;font-family:inherit}
+#astraForm:focus-within{box-shadow:0 0 0 4px rgba(62,216,168,.15),0 0 20px rgba(62,216,168,.25)}
+#astraInput{flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font-size:.8rem;font-family:inherit}
 #astraInput::placeholder{opacity:.5}
-#astraSend{width:34px;height:34px;flex:none;border:0;border-radius:50%;display:grid;place-items:center;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#3ED8A8,#2fb88d);color:#04211a;box-shadow:0 0 0 0 rgba(62,216,168,.5);animation:amPulse 2.4s infinite;transition:transform .2s}
+#astraSend{width:32px;height:32px;flex:none;border:0;border-radius:50%;display:grid;place-items:center;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#3ED8A8,#2fb88d);color:#04211a;animation:amPulse 2.4s infinite;transition:transform .2s}
 #astraSend:hover{transform:scale(1.1) rotate(-8deg)}
 #astraSend:disabled{opacity:.5;cursor:default;animation:none}
 #astraSend.fly svg{animation:amFly .6s ease}
-@keyframes amPulse{0%{box-shadow:0 0 0 0 rgba(62,216,168,.5)}70%,100%{box-shadow:0 0 0 10px rgba(62,216,168,0)}}
+@keyframes amPulse{0%{box-shadow:0 0 0 0 rgba(62,216,168,.5)}70%,100%{box-shadow:0 0 0 9px rgba(62,216,168,0)}}
 @keyframes amFly{0%{transform:translate(0,0)}45%{transform:translate(26px,-26px);opacity:0}55%{transform:translate(-26px,26px);opacity:0}100%{transform:translate(0,0);opacity:1}}
 @media (prefers-reduced-motion:reduce){#astraChat,#astraChat *,#astraChat::before{animation:none!important;transition:none!important}#astraChips button{opacity:1}}
 </style>
 <script>
 (function(){
   var host=document.getElementById('botBubbleText'); if(!host) return;
+  var AV='<div class="av"><svg width="18" height="18" viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="6" stroke="#04211a" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="2.6" r="1.5" fill="#04211a"/><rect x="4" y="6" width="16" height="13" rx="5" fill="#04211a"/><circle class="eye" cx="9" cy="12.2" r="1.9" fill="#3ED8A8"/><circle class="eye" cx="15" cy="12.2" r="1.9" fill="#3ED8A8"/><path d="M9.5 16q2.5 1.6 5 0" stroke="#3ED8A8" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg></div>';
   var box=document.createElement('div'); box.id='astraChat';
-  box.innerHTML='<div id="astraLog"></div><div id="astraChips"></div><div id="astraForm"><input id="astraInput" maxlength="300" placeholder="Tanya apa saja tentang Waffir..." autocomplete="off"><button type="button" id="astraSend" aria-label="Kirim"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>';
+  box.innerHTML='<div id="astraLog"></div><div id="astraChips"></div><div id="astraForm"><input id="astraInput" maxlength="300" placeholder="Tanya Astra..." autocomplete="off"><button type="button" id="astraSend" aria-label="Kirim"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>';
   host.parentNode.insertBefore(box, host.nextSibling);
   var log=box.querySelector('#astraLog'), input=box.querySelector('#astraInput'),
       send=box.querySelector('#astraSend'), chips=box.querySelector('#astraChips');
@@ -2165,7 +2168,7 @@ img,svg,table{max-width:100%}
   }
   function add(role,html){
     var d=document.createElement('div'); d.className='am '+(role==='user'?'u':'b');
-    d.innerHTML=(role==='user'?'':'<div class="av">🤖</div>')+'<div class="tx">'+html+'</div>';
+    d.innerHTML=(role==='user'?'':AV)+'<div class="tx">'+html+'</div>';
     log.appendChild(d); log.scrollTop=log.scrollHeight;
     return {tx:d.querySelector('.tx'),av:d.querySelector('.av')};
   }
