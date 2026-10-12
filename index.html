@@ -831,14 +831,15 @@ img,svg,table{max-width:100%}
 .bot-bubble{
   pointer-events:auto;
   position:relative;
-  max-width:265px;
+  width:340px;
+  max-width:calc(100vw - 2rem);
   background:rgba(12,28,22,0.94);
   backdrop-filter:blur(18px) saturate(180%);
   -webkit-backdrop-filter:blur(18px) saturate(180%);
   border:1px solid rgba(62,216,168,0.32);
   box-shadow:0 14px 40px -8px rgba(0,0,0,0.72), 0 0 22px rgba(62,216,168,0.15);
   border-radius:18px;
-  padding:1rem 1.1rem;
+  padding:.9rem .95rem;
   transition:transform .35s var(--ease),opacity .35s var(--ease);
   transform-origin:bottom right;
 }
