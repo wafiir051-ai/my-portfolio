@@ -49,6 +49,13 @@ const projects = [
     desc: 'Sistem Informasi Markas Qur\'an — platform untuk mencatat setoran hafalan santri dan menghasilkan rapor tahfidz secara otomatis, memudahkan musyrif/ustadz memantau perkembangan hafalan tiap santri.',
     tags: ['Web App', 'Tahfidz', 'Rapor Otomatis'],
     link: 'https://simaq.vercel.app/'
+  },
+  {
+    cat: 'E-Commerce & Fashion',
+    title: 'CORVUS',
+    desc: 'Platform e-commerce & website brand streetwear kontemporer CORVUS — katalog produk dinamis, editorial lookbook, shopping bag, dan integrasi backend Supabase.',
+    tags: ['Next.js', 'Supabase', 'E-Commerce', 'Tailwind CSS'],
+    link: 'https://officialcorvuscom.vercel.app/'
   }
 ]
 
