@@ -2332,11 +2332,18 @@ img,svg,table{max-width:100%}
 <!-- AUTO-AGE-START -->
 <script>
 (function(){
+  var URL_='https://erfuemuloqptttrbccmw.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZnVlbXVsb3FwdHR0cmJjY213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDk4OTgsImV4cCI6MjEwMTM4NTg5OH0.NRk5Ve1I6s71Zw1RAd10IFrXlI7ivySC3LDeQRb68ko';
   var b=new Date(2010,4,20),n=new Date();
   var age=n.getFullYear()-b.getFullYear();
   if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))age--;
-  var re=/\b16(\s*)(tahun|th)\b|\b(usia|umur)(\s+)16\b/gi;
-  function fix(t){return t.replace(re,function(m,a,b,c,d){return b?age+a+b:c+d+age})}
+  var cur=16;
+  function rx(){
+    var nums=cur===16?'16':'16|'+cur;
+    return new RegExp('\\b('+nums+')(\\s*)(tahun|th)\\b|\\b(usia|umur)(\\s+)('+nums+')\\b','gi');
+  }
+  function fix(t){
+    return t.replace(rx(),function(m,g1,g2,g3,g4,g5){return g3?age+g2+g3:g4+g5+age});
+  }
   function walk(root){
     var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(x){
       var p=x.parentNode&&x.parentNode.nodeName;
@@ -2349,6 +2356,13 @@ img,svg,table{max-width:100%}
     var m=document.querySelector('meta[name="description"]');
     if(m)m.content=fix(m.content);
     document.title=fix(document.title);
+    cur=age;
+    fetch(URL_+'/rest/v1/rpc/get_age',{method:'POST',
+      headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:'{}'})
+      .then(function(r){return r.ok?r.json():null})
+      .then(function(v){
+        if(typeof v==='number'&&v>=10&&v<=100&&v!==age){age=v;walk(document.body);cur=age}
+      }).catch(function(){});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
   new MutationObserver(function(){walk(document.body)}).observe(document.body,{childList:true,subtree:true,characterData:true});
