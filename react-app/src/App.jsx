@@ -1,3 +1,5 @@
+import { useCallback, useState } from 'react'
+import Loader from './components/Loader'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
 import About from './components/About'
@@ -6,24 +8,32 @@ import Projects from './components/Projects'
 import Services from './components/Services'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
-import AmbientLayer from './components/AmbientLayer'
 import CyberBot from './components/CyberBot'
-import FloatingChars from './components/FloatingChars'
-import { useReveal } from './hooks/useReveal'
-import { useBotScroll } from './hooks/useBotScroll'
+import TargetCursor from './components/reactbits/TargetCursor/TargetCursor'
+import { useScrollCraft } from './hooks/useScrollCraft'
+import { usePrefs } from './hooks/usePrefs'
 
 export default function App() {
-  useReveal()
-  useBotScroll()
+  const [ready, setReady] = useState(false)
+  const onDone = useCallback(() => setReady(true), [])
+  const { fine, reduce } = usePrefs()
+
+  useScrollCraft(ready)
 
   return (
     <>
-      <FloatingChars />
-      <AmbientLayer />
+      <Loader onDone={onDone} />
+      {fine && !reduce && (
+        <TargetCursor
+          targetSelector=".cursor-target"
+          cursorColor="#EEF3EF"
+          cursorColorOnTarget="#3ED8A8"
+          blendMode="difference"
+          hideDefaultCursor
+        />
+      )}
       <Nav />
-      <header className="hero" id="top">
-        <Hero />
-      </header>
+      <Hero />
       <main>
         <About />
         <Skills />

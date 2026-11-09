@@ -1,16 +1,24 @@
-# React + Vite
+# Portofolio Waffir (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Versi React dari portofolio. Acuan desain ada di [`../DESIGN.md`](../DESIGN.md).
 
-Currently, two official plugins are available:
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Obrolan Astra
 
-## React Compiler
+Kotak obrolan di bubble Astra memanggil `POST /api/chat` (fungsi Vercel di `../api/chat.js`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Untuk mencobanya lokal (`npm run dev` atau `npm run preview`), salin `env.example` jadi `.env.local` dan isi `GEMINI_API_KEY` (dan `SUPABASE_URL`, `SUPABASE_ANON_KEY` kalau mau umur dari Supabase). Server lokal lalu menjalankan `api/chat.js` sendiri. Tanpa kunci, Astra menjawab bahwa obrolan lokal belum diatur.
 
-## Expanding the Oxlint configuration
+Alternatifnya isi `VITE_API_TARGET` dengan alamat deploy Vercel; `/api` akan diteruskan ke sana.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Saat deploy, folder `api/` harus ada di root proyek Vercel yang dipakai.
+
+## Isi penting
+
+- `src/lib/scrollcraft.*` mesin scroll (atribut `data-sc-*`).
+- `src/components/reactbits/` komponen ReactBits. Dua salinan dipatch kecil: `FluxLines`, `CursorGrid`, `Ferrofluid` (tidak memanggil `loseContext` saat unmount, supaya aman di React StrictMode) dan `FlyingButton` (pointer dipantau di window agar panggungnya bisa selebar halaman).

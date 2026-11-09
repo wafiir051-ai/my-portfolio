@@ -1,68 +1,58 @@
 import { useState, useEffect, useRef } from 'react'
+import './CyberBot.css'
+import AstraChat from './AstraChat'
 
 const sectionData = {
   top: {
-    badge: '⚡ ASTRA BOT • ONLINE',
-    text: 'Halo! Selamat datang di portofolio Waffir. Scroll ke bawah yuk! 🚀',
+    badge: 'ASTRA BOT | ONLINE',
+    text: 'Halo! Selamat datang di portofolio Waffir. Scroll ke bawah yuk!',
     expr: 'expr-happy',
     waving: true
   },
   tentang: {
-    badge: '🤖 INFO DEVELOPER',
-    text: 'Waffir adalah developer 16 tahun & Ketua Tim Robotika asal Subang! 🏆',
+    badge: 'INFO DEVELOPER',
+    text: 'Waffir adalah pelajar SMK & Ketua Tim Robotika asal Subang!',
     expr: 'expr-normal',
     waving: false
   },
   skills: {
-    badge: '⚙️ TECH STACK',
-    text: 'Kombinasi Web, Mobile (Flutter) & IoT (ESP32) siap pakai! ⚡',
+    badge: 'TECH STACK',
+    text: 'Kombinasi Web, Mobile (Flutter) & IoT (ESP32) siap pakai!',
     expr: 'expr-scan',
     waving: false
   },
   proyek: {
-    badge: '💻 PROJECT RADAR',
-    text: 'Ini dia proyek-proyek live dari client, sekolah & riset IoT! 🌟',
+    badge: 'PROJECT RADAR',
+    text: 'Ini dia proyek-proyek live dari client, sekolah & riset IoT!',
     expr: 'expr-happy',
     waving: true
   },
   layanan: {
-    badge: '🛠️ DEV SERVICES',
-    text: 'Punya ide website, aplikasi atau alat IoT? Siap bantu garap! 💡',
+    badge: 'DEV SERVICES',
+    text: 'Punya ide website, aplikasi atau alat IoT? Siap bantu garap!',
     expr: 'expr-normal',
     waving: false
   },
   kontak: {
-    badge: '📬 CONNECT NOW',
-    text: 'Tertarik kerja sama? Kirim pesan via WhatsApp atau Email ya! ✨',
+    badge: 'CONNECT NOW',
+    text: 'Tertarik kerja sama? Kirim pesan via WhatsApp atau Email ya!',
     expr: 'expr-happy',
     waving: true
   }
 }
 
-const easterEggs = [
-  { badge: '⚡ ESP32 + FLUTTER', text: 'Kombo maut buat bikin aplikasi terhubung hardware pintar! 🤖', expr: 'expr-happy' },
-  { badge: '☕ NGODING NIGHT', text: 'Fun fact: Waffir sering eksplor teknologi baru sampai tengah malam! 🌙', expr: 'expr-wink' },
-  { badge: '🏆 ROBOTIKA SUBANG', text: 'Ketua Tim Robotika di SMKIT Assyifa Boarding School! 🦾', expr: 'expr-happy' },
-  { badge: '🚀 READY TO DEPLOY', text: 'Website responsif, cepat, & terintegrasi database real-time! ⚡', expr: 'expr-scan' },
-  { badge: '✨ TERIMA KASIH', text: 'Terima kasih sudah mampir! Yuk klik tombol kontak untuk kolaborasi! 💬', expr: 'expr-happy' }
-]
-
 export default function CyberBot() {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const [dialog, setDialog] = useState(sectionData.top)
-  const [pctText, setPctText] = useState('0%')
   const [isSpinning, setIsSpinning] = useState(false)
   const [textVisible, setTextVisible] = useState(true)
 
   const botRef = useRef(null)
   const stageRef = useRef(null)
   const progressBarRef = useRef(null)
-  const sparkBurstRef = useRef(null)
 
   const isManualRef = useRef(false)
-  const manualTimerRef = useRef(null)
   const currentSectionRef = useRef('top')
-  const eggIdxRef = useRef(0)
 
   // Scroll Progress and Physics Loop
   useEffect(() => {
@@ -95,9 +85,7 @@ export default function CyberBot() {
 
       const docH = document.documentElement.scrollHeight - window.innerHeight
       const pct = docH > 0 ? Math.min(Math.max(sy / docH, 0), 1) : 0
-      const pctFormatted = Math.round(pct * 100)
 
-      setPctText(`${pctFormatted}%`)
       if (progressBarRef.current) {
         const offset = circumference - pct * circumference
         progressBarRef.current.style.strokeDashoffset = offset.toFixed(2)
@@ -202,72 +190,40 @@ export default function CyberBot() {
 
   const handleBotClick = (e) => {
     e.stopPropagation()
-    setIsCollapsed(false)
-
-    // Trigger 360 spin animation
+    setIsCollapsed((prev) => !prev)
     setIsSpinning(true)
     setTimeout(() => setIsSpinning(false), 800)
-
-    // Sparkle burst
-    if (sparkBurstRef.current) {
-      sparkBurstRef.current.innerHTML = ''
-      sparkBurstRef.current.classList.add('active')
-      for (let i = 0; i < 8; i++) {
-        const spark = document.createElement('div')
-        spark.className = 'spark-particle'
-        const angle = (i / 8) * Math.PI * 2
-        const dist = 34 + Math.random() * 18
-        spark.style.setProperty('--dx', `${(Math.cos(angle) * dist).toFixed(1)}px`)
-        spark.style.setProperty('--dy', `${(Math.sin(angle) * dist).toFixed(1)}px`)
-        sparkBurstRef.current.appendChild(spark)
-      }
-      setTimeout(() => {
-        if (sparkBurstRef.current) sparkBurstRef.current.classList.remove('active')
-      }, 700)
-    }
-
-    // Cycle easter eggs
-    const egg = easterEggs[eggIdxRef.current % easterEggs.length]
-    eggIdxRef.current++
-    isManualRef.current = true
-    clearTimeout(manualTimerRef.current)
-
-    setTextVisible(false)
-    setTimeout(() => {
-      setDialog({
-        badge: egg.badge,
-        text: egg.text,
-        expr: egg.expr,
-        waving: true
-      })
-      setTextVisible(true)
-    }, 120)
-
-    manualTimerRef.current = setTimeout(() => {
-      isManualRef.current = false
-      const fallback = sectionData[currentSectionRef.current] || sectionData.top
-      setDialog(fallback)
-    }, 5500)
   }
+
+  // Esc menutup panel obrolan.
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && setIsCollapsed(true)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   return (
     <div className="cyber-companion-wrap" id="cyberCompanionWrap">
       {/* Speech Bubble */}
       <div className={`bot-bubble ${isCollapsed ? 'is-collapsed' : ''}`} id="botBubble">
         <div className="bot-bubble-header">
-          <span className="bot-badge" id="botBadge">{dialog.badge}</span>
+          <span className="bot-avatar" aria-hidden="true" />
+          <span className="bot-title">
+            <strong>Astra</strong>
+            <small>Asisten Waffir</small>
+          </span>
           <button
             type="button"
             className="bot-close-btn"
             id="botCloseBtn"
-            title="Tutup pesan"
-            aria-label="Tutup pesan"
+            title="Tutup obrolan"
+            aria-label="Tutup obrolan"
             onClick={(e) => {
               e.stopPropagation()
               setIsCollapsed(true)
             }}
           >
-            ✕
+            &times;
           </button>
         </div>
         <div
@@ -277,16 +233,7 @@ export default function CyberBot() {
         >
           {dialog.text}
         </div>
-        <div className="bot-bubble-footer">
-          <span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>{' '}
-            Scroll Progress
-          </span>
-          <span className="bot-pct-num" id="botPctNum">{pctText}</span>
-        </div>
+        <AstraChat />
       </div>
 
       {/* Companion Character */}
@@ -296,7 +243,8 @@ export default function CyberBot() {
         ref={botRef}
         role="button"
         tabIndex="0"
-        aria-label="Asisten Robotik Waffir, klik untuk interaksi"
+        aria-label="Buka obrolan dengan Astra, asisten Waffir"
+        aria-expanded={!isCollapsed}
         onClick={handleBotClick}
       >
         <button
@@ -309,7 +257,7 @@ export default function CyberBot() {
             setIsCollapsed((prev) => !prev)
           }}
         >
-          💬 Tanya Bot
+          Tanya Bot
         </button>
 
         {/* Circular Scroll Progress Ring */}
@@ -322,9 +270,6 @@ export default function CyberBot() {
         <div className="bot-orb-orbit" aria-hidden="true">
           <div className="bot-orb" />
         </div>
-
-        {/* Sparkle Burst Container */}
-        <div className="bot-spark-burst" id="botSparkBurst" ref={sparkBurstRef} aria-hidden="true" />
 
         {/* Floating Robot Stage */}
         <div className="bot-float-stage" id="botFloatStage" ref={stageRef}>

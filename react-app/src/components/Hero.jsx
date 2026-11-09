@@ -1,138 +1,133 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import FluxLines from './reactbits/FluxLines/FluxLines'
+import TechText from './reactbits/TechText/TechText'
+import ProfileCard from './reactbits/ProfileCard/ProfileCard'
+import { useFontsReady, usePrefs } from '../hooks/usePrefs'
 
-export default function Hero() {
-  const [roleText, setRoleText] = useState('Full-Stack Developer')
-  const heroRef = useRef(null)
-  const frameRef = useRef(null)
+const ROLES = ['Full-Stack Developer', 'Mobile Developer (Flutter)', 'IoT & Hardware Engineer']
 
-  // Typewriter effect
+function useTypewriter(enabled) {
+  const [text, setText] = useState(ROLES[0])
+
   useEffect(() => {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduceMotion) {
-      setRoleText('Full-Stack Developer')
-      return
-    }
-
-    const roles = ['Full-Stack Developer', 'Mobile App Developer (Flutter)', 'IoT & Hardware Engineer']
+    if (!enabled) return
     let ri = 0
     let ci = 0
     let deleting = false
     let timer
-
-    function tick() {
-      const word = roles[ri]
+    const tick = () => {
+      const word = ROLES[ri]
       ci += deleting ? -1 : 1
-      setRoleText(word.slice(0, ci))
+      setText(word.slice(0, ci))
       let delay = deleting ? 35 : 65
-
       if (!deleting && ci === word.length) {
-        delay = 1500
+        delay = 1600
         deleting = true
       } else if (deleting && ci === 0) {
         deleting = false
-        ri = (ri + 1) % roles.length
+        ri = (ri + 1) % ROLES.length
         delay = 300
       }
       timer = setTimeout(tick, delay)
     }
-
-    timer = setTimeout(tick, 500)
+    timer = setTimeout(tick, 1800)
     return () => clearTimeout(timer)
-  }, [])
+  }, [enabled])
 
-  // Mouse tilt parallax on hero photo
-  useEffect(() => {
-    const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!supportsHover || reduceMotion) return
+  return text
+}
 
-    const hero = heroRef.current
-    const frame = frameRef.current
-    if (!hero || !frame) return
+export default function Hero() {
+  const { reduce, narrow } = usePrefs()
+  const fontsReady = useFontsReady()
+  const role = useTypewriter(!reduce)
 
-    let rafId = null
-
-    const handleMouseMove = (e) => {
-      const rect = hero.getBoundingClientRect()
-      const px = (e.clientX - rect.left) / rect.width - 0.5
-      const py = (e.clientY - rect.top) / rect.height - 0.5
-
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => {
-        if (frame) {
-          frame.style.transform = `rotateY(${px * 18}deg) rotateX(${-py * 18}deg)`
-        }
-      })
-    }
-
-    const handleMouseLeave = () => {
-      if (rafId) cancelAnimationFrame(rafId)
-      if (frame) {
-        frame.style.transform = 'rotateY(0deg) rotateX(0deg)'
-      }
-    }
-
-    hero.addEventListener('mousemove', handleMouseMove)
-    hero.addEventListener('mouseleave', handleMouseLeave)
-
-    return () => {
-      hero.removeEventListener('mousemove', handleMouseMove)
-      hero.removeEventListener('mouseleave', handleMouseLeave)
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [])
+  const toContact = () =>
+    document.getElementById('kontak')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' })
 
   return (
-    <div className="container" ref={heroRef}>
-      <div className="hero-copy">
-        <div className="status-pill">
-          <span className="status-dot" aria-hidden="true" />
-          Terbuka untuk proyek baru
-        </div>
-        <h1>
-          Waffir Hasan
-          <br />
-          Alkamiil
-        </h1>
-        <p className="hero-role">
-          <span id="heroRole">{roleText}</span>
-          <span className="cursor" aria-hidden="true" />
-        </p>
-        <p className="lede">
-          Saya membangun aplikasi web, mobile, dan perangkat IoT dari ide sampai jalan nyata — sudah dipakai sekolah, komunitas, dan klien bisnis. Pelajar SMK, 16 tahun, asal Subang, Jawa Barat.
-        </p>
-        <div className="hero-actions">
-          <a href="#proyek" className="btn btn-primary">Lihat Proyek</a>
-          <a href="#kontak" className="btn btn-outline">Hubungi Saya</a>
-        </div>
-        <div className="hero-tech">
-          <span className="pill">React</span>
-          <span className="pill">Next.js</span>
-          <span className="pill">Flutter</span>
-          <span className="pill">Supabase</span>
-          <span className="pill">ESP32</span>
-          <span className="pill">Vercel</span>
-        </div>
-      </div>
-      <div className="hero-visual">
-        <div className="hero-photo-frame" ref={frameRef}>
-          <img
-            src="/malioboro.jpg"
-            alt="Waffir Hasan Alkamiil di Jalan Malioboro, Yogyakarta"
-            width="900"
-            height="1200"
-            fetchPriority="high"
-            loading="eager"
+    <header className="hero" id="top" data-sc-act="flow">
+      {/* Lapisan 0: latar. Bergerak paling pelan. */}
+      {!reduce && (
+        <div className="hero__flux" data-sc-parallax="0.9" aria-hidden="true">
+          <FluxLines
+            colors={['#3ED8A8', '#1F8F70', '#0E4A3A']}
+            speed={0.3}
+            scale={1.4}
+            transparent={false}
+            backgroundColor="#0B1814"
+            opacity={0.7}
+            glow={0.4}
+            shimmer={0.3}
+            sharpness={3.5}
+            lineWidth={0.8}
+            mouseStrength={0.8}
           />
-          <div className="hero-photo-caption">
-            <span>
-              <span className="status-dot" aria-hidden="true" style={{ display: 'inline-block', marginRight: '.4rem', verticalAlign: 'middle' }} />
-              Waffir Hasan Alkamiil
-            </span>
-            <strong>Subang, ID</strong>
-          </div>
+        </div>
+      )}
+
+      {/* Lapisan 1: kata besar, di belakang kartu dan di depan latar. */}
+      <div className="hero__mark" data-sc-parallax="-1.6" aria-hidden="true">
+        {fontsReady && (
+          <TechText
+            text="WAFFIR"
+            fontFamily="Archivo, system-ui, sans-serif"
+            fontWeight={900}
+            letterSpacing={-0.04}
+            color="#EEF3EF"
+            accentColor="#3ED8A8"
+            align={narrow ? 'center' : 'left'}
+            labels={!narrow}
+            specks={narrow ? 6 : 15}
+            reach={narrow ? 120 : 200}
+          />
+        )}
+      </div>
+      <h1 className="sr-only">Waffir Hasan Alkamiil</h1>
+
+      {/* Lapisan 2: kartu. Memotong kata besar, jadi kedalamannya terbaca. */}
+      <div className="hero__card" data-sc-parallax="0.5">
+        <ProfileCard
+          avatarUrl="/malioboro.jpg"
+          name="Waffir Hasan Alkamiil"
+          title="Full-Stack & IoT Developer"
+          handle="wafiir051-ai"
+          status="Terbuka untuk proyek"
+          statusColor="#3ED8A8"
+          contactText="Hubungi"
+          onContactClick={toContact}
+          backdropColor="#11241E"
+          radius={6}
+          enableTilt={!reduce}
+          holo={0.55}
+          glare={0.35}
+        />
+      </div>
+
+      {/* Lapisan 3: teks. Tidak ikut bergerak supaya tetap terbaca. */}
+      <div className="hero__copy">
+        <p className="label">Subang, Jawa Barat</p>
+        <p className="hero__role" aria-label="Peran">
+          <span>{role}</span>
+          <span className="caret" aria-hidden="true" />
+        </p>
+        <p className="hero__lede">
+          Saya membuat web app, aplikasi Flutter, dan alat IoT. Beberapa sudah dipakai sekolah dan klien.
+        </p>
+        <div className="hero__actions">
+          <a href="#proyek" className="btn btn--primary cursor-target" data-cursor-label="Proyek">
+            Lihat proyek
+          </a>
+          <a href="#kontak" className="btn btn--line cursor-target" data-cursor-label="Kontak">
+            Hubungi saya
+          </a>
         </div>
       </div>
-    </div>
+      <ul className="hero__stack" aria-label="Alat utama">
+        {['React', 'Next.js', 'Flutter', 'Supabase', 'ESP32', 'Vercel'].map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+    </header>
   )
 }

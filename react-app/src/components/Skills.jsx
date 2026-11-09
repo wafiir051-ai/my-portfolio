@@ -1,50 +1,54 @@
+import CursorGrid from './reactbits/CursorGrid/CursorGrid'
+import { usePrefs } from '../hooks/usePrefs'
+
+const STACK = [
+  ['Frontend', ['React', 'Next.js', 'Vite', 'Flutter', 'Tailwind CSS']],
+  ['Backend dan data', ['Supabase', 'PostgreSQL', 'Node.js', 'Python / FastAPI']],
+  ['Hardware dan IoT', ['ESP32', 'Arduino', 'Integrasi sensor', 'Firmware']],
+  ['Perkakas', ['Git dan GitHub', 'Vercel', 'Figma']],
+]
+
 export default function Skills() {
-  return (
-    <section className="section section-alt" id="skills">
-      <div className="container">
-        <div className="section-head reveal">
-          <div className="eyebrow">Tools &amp; Teknologi</div>
-          <h2>Stack yang saya pakai sehari-hari</h2>
-        </div>
-        <div className="skills-grid">
-          <div className="card reveal">
-            <div className="eyebrow">Frontend</div>
-            <div className="skill-tags">
-              <span className="pill">React</span>
-              <span className="pill">Next.js</span>
-              <span className="pill">Vite</span>
-              <span className="pill">Flutter</span>
-              <span className="pill">Tailwind CSS</span>
-            </div>
-          </div>
-          <div className="card reveal">
-            <div className="eyebrow">Backend &amp; Data</div>
-            <div className="skill-tags">
-              <span className="pill">Supabase</span>
-              <span className="pill">PostgreSQL</span>
-              <span className="pill">Node.js</span>
-              <span className="pill">Python / FastAPI</span>
-            </div>
-          </div>
-          <div className="card reveal">
-            <div className="eyebrow">Hardware &amp; IoT</div>
-            <div className="skill-tags">
-              <span className="pill">ESP32</span>
-              <span className="pill">Arduino</span>
-              <span className="pill">Sensor Integration</span>
-              <span className="pill">Firmware</span>
-            </div>
-          </div>
-          <div className="card reveal">
-            <div className="eyebrow">Tools</div>
-            <div className="skill-tags">
-              <span className="pill">Git &amp; GitHub</span>
-              <span className="pill">Vercel</span>
-              <span className="pill">Figma</span>
-            </div>
-          </div>
-        </div>
+  const { reduce, fine } = usePrefs()
+
+  const content = (
+    <div className="sc-wrap stack">
+      <div className="stack__head" data-sc-in>
+        <h2 className="display">Alat yang saya pakai tiap hari.</h2>
       </div>
+      <div className="ledger" data-sc-in data-sc-stagger="70">
+        {STACK.map(([group, items]) => (
+          <div className="ledger__row" key={group}>
+            <h3 className="label">{group}</h3>
+            <ul className="ledger__items">
+              {items.map((i) => (
+                <li key={i}>{i}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  return (
+    <section className="sec stack-sec" id="skills" data-sc-act="flow">
+      {reduce || !fine ? (
+        content
+      ) : (
+        <CursorGrid
+          className="stack__grid"
+          cellSize={56}
+          color="#3ED8A8"
+          gridColor="#EEF3EF"
+          gridOpacity={0.06}
+          fillOpacity={0.1}
+          radius={150}
+          spotlight={0.35}
+        >
+          {content}
+        </CursorGrid>
+      )}
     </section>
   )
 }

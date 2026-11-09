@@ -1,39 +1,87 @@
+import { HugeiconsIcon } from '@hugeicons/react'
+import { WhatsappIcon, Mail01Icon, GithubIcon, Globe02Icon } from '@hugeicons/core-free-icons'
+import Ferrofluid from './reactbits/Ferrofluid/Ferrofluid'
+import FlyingButton from './reactbits/FlyingButton/FlyingButton'
+import { usePrefs } from '../hooks/usePrefs'
+
+const WA = 'https://wa.me/6281219135378'
+
+const LINKS = [
+  { href: 'mailto:waffir.hasan25@smk.belajar.id', label: 'Email', icon: Mail01Icon },
+  { href: 'https://github.com/wafiir051-ai', label: 'GitHub', icon: GithubIcon, ext: true },
+  { href: 'https://www.godingofficial.com/', label: 'Goding Official', icon: Globe02Icon, ext: true },
+]
+
 export default function Contact() {
+  const { reduce, fine } = usePrefs()
+  const flies = fine && !reduce
+
   return (
-    <section className="section contact-band" id="kontak">
-      <div className="container reveal">
-        <div className="eyebrow" style={{ justifyContent: 'center' }}>Kontak</div>
-        <h2>Ada proyek yang mau dikerjakan bareng?</h2>
-        <p>Ceritain kebutuhan kamu lewat WhatsApp atau email — nanti kita diskusikan detailnya bareng-bareng.</p>
-        <div className="contact-actions">
-          <a href="https://wa.me/6281219135378" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-            </svg>
-            Chat via WhatsApp
-          </a>
-          <a href="mailto:waffir.hasan25@smk.belajar.id" className="btn btn-outline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="5" width="18" height="14" rx="2" />
-              <path d="M3 7l9 6 9-6" />
-            </svg>
-            Email
-          </a>
-          <a href="https://github.com/wafiir051-ai" target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-            <svg viewBox="0 0 24 24">
-              <path d="M8 6L2 12L8 18M16 6L22 12L16 18" />
-            </svg>
-            GitHub
-          </a>
-          <a href="https://www.godingofficial.com/" target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-            </svg>
-            Goding Official
-          </a>
+    <section className="sec contact" id="kontak" data-sc-act="flow">
+      {!reduce && (
+        <div className="contact__bed" aria-hidden="true">
+          <Ferrofluid
+            colors={['#3ED8A8', '#4a6b60', '#EEF3EF']}
+            speed={0.3}
+            scale={1.3}
+            opacity={0.8}
+            brightness={0.9}
+            mouseStrength={0.8}
+          />
         </div>
+      )}
+      <div className="contact__scrim" aria-hidden="true" />
+      <div className={`sc-wrap contact__body`} data-sc-in data-sc-stagger="80">
+        <div className="contact__text">
+          <h2 className="display">Punya proyek? Ceritakan saja.</h2>
+          <p className="body">Kirim kebutuhanmu lewat WhatsApp atau email, nanti kita bahas detailnya.</p>
+          <div className="contact__links">
+            {!flies && (
+              <a
+                href={WA}
+                className="btn btn--primary cursor-target"
+                data-cursor-label="WhatsApp"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <HugeiconsIcon icon={WhatsappIcon} size={18} strokeWidth={1.8} />
+                Chat WhatsApp
+              </a>
+            )}
+            {LINKS.map((l) => (
+              <a
+                key={l.label}
+                href={l.href}
+                className="btn btn--line cursor-target"
+                data-cursor-label={l.label}
+                {...(l.ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              >
+                <HugeiconsIcon icon={l.icon} size={18} strokeWidth={1.8} />
+                {l.label}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {flies && (
+          <div className="contact__pad">
+            <FlyingButton
+              size="large"
+              altitude={520}
+              hoverTime={4}
+              jets={2}
+              radius={4}
+              carryCursor
+              buttonColor="#3ED8A8"
+              textColor="#04211A"
+              thrustColor="#9FF0D6"
+              smokeColor="#EEF3EF"
+              onClick={() => window.open(WA, '_blank', 'noopener,noreferrer')}
+            >
+              Chat WhatsApp
+            </FlyingButton>
+          </div>
+        )}
       </div>
     </section>
   )
