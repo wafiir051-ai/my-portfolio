@@ -22,6 +22,10 @@
   --sc-section: clamp(4.5rem, 9vw, 9rem);
   --sc-gutter: clamp(1.25rem, 5vw, 5rem);
   --topbar-h: 4.25rem;
+  --sc-maxw: 90rem;
+  /* Tepi konten: gutter di layar kecil, ditambah sisa lebar di layar sangat lebar,
+     supaya hero, rak, dan nav tetap sejajar dengan bagian lain. */
+  --edge: calc(var(--sc-gutter) + max(0px, (100vw - var(--sc-maxw)) / 2));
 }
 
 html {
@@ -152,7 +156,7 @@ main section[id],
   inset: 0 0 auto 0;
   z-index: 60;
   height: var(--topbar-h);
-  padding-inline: var(--sc-gutter);
+  padding-inline: var(--edge);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -189,7 +193,7 @@ main section[id],
 }
 .topbar__nav {
   position: absolute;
-  right: var(--sc-gutter);
+  right: var(--edge);
   top: 50%;
   translate: 0 -50%;
 }
@@ -217,7 +221,7 @@ main section[id],
 .topbar__sheet {
   position: absolute;
   top: calc(var(--topbar-h) - 0.25rem);
-  right: var(--sc-gutter);
+  right: var(--edge);
   padding: 1rem 1rem 1rem 0.75rem;
   background: var(--sc-surface);
   border: 1px solid var(--sc-hairline);
@@ -236,7 +240,7 @@ main section[id],
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 23rem);
   grid-template-rows: auto auto 1fr auto;
   column-gap: clamp(1.5rem, 5vw, 5rem);
-  padding: calc(var(--topbar-h) + clamp(1rem, 4vh, 3rem)) var(--sc-gutter) 0;
+  padding: calc(var(--topbar-h) + clamp(1rem, 4vh, 3rem)) var(--edge) 0;
 }
 .hero__flux {
   position: absolute;
@@ -438,7 +442,7 @@ main section[id],
 .rack__rail {
   align-items: stretch;
   gap: clamp(1rem, 2.4vw, 2.5rem);
-  padding-inline: var(--sc-gutter);
+  padding-inline: var(--edge);
   height: min(40rem, calc(100svh - var(--topbar-h) - 1.5rem));
 }
 .rack__head {
@@ -649,6 +653,7 @@ main section[id],
 .contact {
   position: relative;
   isolation: isolate;
+  overflow-x: clip;
   min-height: min(48rem, 100svh);
   display: flex;
   align-items: center;
@@ -869,5 +874,78 @@ main section[id],
   }
   .facts {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- penyesuaian ukuran layar ---------- */
+
+/* Tablet dan laptop kecil */
+@media (max-width: 1100px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 19rem);
+  }
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 0.5rem;
+  }
+  .ledger__row {
+    grid-template-columns: minmax(7rem, 11rem) 1fr;
+  }
+  .svc {
+    gap: 0.75rem 2rem;
+  }
+  .contact__text {
+    max-width: 30rem;
+  }
+}
+
+/* Layar sangat lebar: jaga proporsi, jangan melar */
+@media (min-width: 1600px) {
+  :root {
+    font-size: 106.25%;
+  }
+}
+@media (min-width: 2200px) {
+  :root {
+    font-size: 125%;
+  }
+}
+
+/* Jendela pendek (laptop dengan banyak bilah alat) */
+@media (max-height: 640px) and (min-width: 861px) {
+  .hero__mark {
+    height: clamp(8rem, 34vh, 14rem);
+  }
+  .rack__rail {
+    height: calc(100svh - var(--topbar-h) - 1rem);
+  }
+  .browser img,
+  .dg {
+    height: clamp(4.5rem, 16svh, 8rem);
+  }
+}
+
+/* HP kecil */
+@media (max-width: 380px) {
+  .display {
+    font-size: clamp(1.9rem, 9.5vw, 2.4rem);
+  }
+  .hero__actions .btn,
+  .contact__links .btn {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* HP landscape: pendek tapi lebar */
+@media (max-height: 480px) and (orientation: landscape) {
+  .hero {
+    min-height: 0;
+  }
+  .rack__rail {
+    height: calc(100svh - var(--topbar-h) - 0.5rem);
   }
 }

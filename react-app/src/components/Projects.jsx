@@ -1,10 +1,11 @@
-import { useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import FolderFloat from './reactbits/FolderFloat/FolderFloat'
 import ProjectDiagram from './ProjectDiagram'
 import { usePrefs } from '../hooks/usePrefs'
+import { fetchProjects } from '../lib/projectsApi'
 
 // Setiap proyek memakai skema label yang sama: jenis, stack, status, tautan.
-const PROJECTS = [
+const FALLBACK = [
   {
     title: 'Puspita Indah',
     shot: 'puspita-indah', caption: 'Beranda',
@@ -85,8 +86,27 @@ const PROJECTS = [
   },
 ]
 
+// Gambar per judul, dipakai juga untuk proyek yang datang dari Supabase.
+const MEDIA = Object.fromEntries(
+  FALLBACK.map((p) => [p.title.toLowerCase(), { shot: p.shot, diagram: p.diagram, caption: p.caption }]),
+)
+
+const NUMBER_WORDS = ['Nol', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas', 'Dua belas']
+
 export default function Projects() {
   const { reduce, fine } = usePrefs()
+  const [remote, setRemote] = useState(null)
+
+  useEffect(() => {
+    const ctrl = new AbortController()
+    fetchProjects(ctrl.signal).then(setRemote, () => {})
+    return () => ctrl.abort()
+  }, [])
+
+  const PROJECTS = useMemo(
+    () => (remote ? remote.map((p) => ({ ...MEDIA[p.title.toLowerCase()], ...p })) : FALLBACK),
+    [remote],
+  )
   const actRef = useRef(null)
   const railRef = useRef(null)
   const plateRefs = useRef([])
@@ -115,7 +135,7 @@ export default function Projects() {
           <div className="rack__head">
             <div>
               <p className="label">Proyek</p>
-              <h2 className="display">Sembilan proyek.</h2>
+              <h2 className="display">{NUMBER_WORDS[PROJECTS.length] || PROJECTS.length} proyek.</h2>
               <p className="body">Semuanya ditulis dengan label yang sama. Scroll untuk menggeser rak, atau pilih dari indeks.</p>
             </div>
             <div className="rack__folder">
@@ -143,6 +163,7 @@ export default function Projects() {
           {PROJECTS.map((p, i) => (
             <article className="plate" key={p.title} ref={(el) => (plateRefs.current[i] = el)}>
               <p className="label">{p.jenis}</p>
+              {(p.shot || p.diagram) && (
               <figure className="plate__media">
                 {p.shot ? (
                   <div className="browser">
@@ -166,6 +187,7 @@ export default function Projects() {
                 )}
                 <figcaption className="label">{p.caption}</figcaption>
               </figure>
+              )}
               <h3 className="plate__title">{p.title}</h3>
               <p className="plate__desc">{p.desc}</p>
               <dl className="plate__meta">
