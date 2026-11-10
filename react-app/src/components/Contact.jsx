@@ -7,6 +7,20 @@ import { usePrefs } from '../hooks/usePrefs'
 
 const WA = 'https://wa.me/6281219135378'
 
+const BRIEF = [
+  ['Kebutuhan', 'Website, aplikasi web, aplikasi mobile, atau alat IoT.'],
+  ['Tujuan', 'Untuk siapa dan masalah apa yang mau diselesaikan.'],
+  ['Waktu', 'Kira-kira kapan harus jadi.'],
+  ['Contoh', 'Tautan atau gambar referensi kalau ada.'],
+]
+
+const FACTS = [
+  ['Lokasi', 'Subang, Jawa Barat'],
+  ['Bahasa', 'Indonesia'],
+  ['Bidang', 'Web, mobile, IoT'],
+  ['Jalur', 'WhatsApp atau email'],
+]
+
 const CHANNELS = [
   { href: WA, label: 'WhatsApp', value: 'Chat langsung', icon: WhatsappIcon, ext: true, primary: true },
   { href: 'mailto:waffir.hasan25@smk.belajar.id', label: 'Email', value: 'waffir.hasan25@smk.belajar.id', icon: Mail01Icon },
@@ -36,35 +50,61 @@ export default function Contact() {
       <div className="contact__scrim" aria-hidden="true" />
 
       <div className="sc-wrap contact__body" data-sc-in data-sc-stagger="80">
-        <SectionHead
-          label="Kontak"
-          title="Punya proyek? Ceritakan saja."
-          intro="Kirim kebutuhanmu lewat WhatsApp atau email, nanti kita bahas detailnya."
-        />
+        <div className="contact__main">
+          <SectionHead
+            label="Kontak"
+            title="Punya proyek? Ceritakan saja."
+            intro="Kirim kebutuhanmu lewat WhatsApp atau email, nanti kita bahas detailnya."
+          />
 
-        <ul className="channels">
-          {CHANNELS.map((c) => (
-            <li key={c.label}>
-              <a
-                href={c.href}
-                className={`channel cursor-target ${c.primary ? 'channel--primary' : ''}`}
-                data-cursor-label={c.label}
-                {...(c.ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              >
-                <span className="channel__icon">
-                  <HugeiconsIcon icon={c.icon} size={22} strokeWidth={1.7} />
-                </span>
-                <span className="channel__text">
-                  <span className="channel__label">{c.label}</span>
-                  <span className="channel__value">{c.value}</span>
-                </span>
-                <span className="channel__go" aria-hidden="true">
-                  <HugeiconsIcon icon={ArrowUpRight01Icon} size={18} strokeWidth={1.8} />
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
+          <ul className="channels">
+            {CHANNELS.map((c) => (
+              <li key={c.label}>
+                <a
+                  href={c.href}
+                  className={`channel cursor-target ${c.primary ? 'channel--primary' : ''}`}
+                  data-cursor-label={c.label}
+                  {...(c.ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                >
+                  <span className="channel__icon">
+                    <HugeiconsIcon icon={c.icon} size={22} strokeWidth={1.7} />
+                  </span>
+                  <span className="channel__text">
+                    <span className="channel__label">{c.label}</span>
+                    <span className="channel__value">{c.value}</span>
+                  </span>
+                  <span className="channel__go" aria-hidden="true">
+                    <HugeiconsIcon icon={ArrowUpRight01Icon} size={18} strokeWidth={1.8} />
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <aside className="brief" aria-label="Yang perlu disiapkan sebelum menghubungi">
+          <header className="brief__head">
+            <span className="brief__tag">Lembar brief</span>
+            <h3 className="brief__title">Biar cepat dibahas, sebutkan ini</h3>
+          </header>
+          <ol className="brief__list">
+            {BRIEF.map(([k, v], i) => (
+              <li key={k}>
+                <span className="brief__no">{String(i + 1).padStart(2, '0')}</span>
+                <span className="brief__k">{k}</span>
+                <span className="brief__v">{v}</span>
+              </li>
+            ))}
+          </ol>
+          <dl className="brief__facts">
+            {FACTS.map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </aside>
       </div>
 
       {flies && (

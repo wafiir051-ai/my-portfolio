@@ -15,8 +15,8 @@ const FALLBACK = [
   },
   {
     id: 'lks-jabar-2026',
-    title: 'Peserta LKS Tingkat Provinsi Jawa Barat 2026, bidang Robot Bergerak Otonom',
-    note: 'Mewakili Kab. Subang, 10 sampai 11 Juni 2026 di SMK Negeri 1 Karawang',
+    title: 'Lolos LKS sampai tingkat kabupaten, bidang Robot Bergerak Otonom',
+    note: 'Mewakili Kab. Subang, LKS 2026',
     year: 2026,
     image: '/prestasi/lks-jabar-2026.jpg',
   },

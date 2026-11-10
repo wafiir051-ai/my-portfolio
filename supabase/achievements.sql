@@ -62,8 +62,8 @@ from (values
   ('Terbaik 1 Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek',
    'Saat kelas 9, bersama Tim Hadroh SMPIT Insan Mandiri Greenville',
    2025, '/prestasi/hadroh-baf-2025.webp', 1),
-  ('Peserta LKS Tingkat Provinsi Jawa Barat 2026, bidang Robot Bergerak Otonom',
-   'Mewakili Kab. Subang, 10 sampai 11 Juni 2026 di SMK Negeri 1 Karawang',
+  ('Lolos LKS sampai tingkat kabupaten, bidang Robot Bergerak Otonom',
+   'Mewakili Kab. Subang, LKS 2026',
    2026, '/prestasi/lks-jabar-2026.jpg', 2)
 ) as v(title, note, year, image_url, sort_order)
 where not exists (select 1 from public.achievements);
