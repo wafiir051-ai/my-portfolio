@@ -11,7 +11,7 @@ const FACTS = [
 
 const AWARD = {
   title: 'Terbaik 1 Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek',
-  note: 'Bersama Tim Hadroh SMPIT Insan Mandiri Greenville',
+  note: '2025, saat kelas 9, bersama Tim Hadroh SMPIT Insan Mandiri Greenville',
 }
 
 export default function About() {
