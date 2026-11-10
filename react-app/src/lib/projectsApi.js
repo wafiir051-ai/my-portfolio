@@ -43,3 +43,21 @@ export async function fetchAchievements(signal) {
     image: typeof a.image_url === 'string' && a.image_url.trim() ? a.image_url.trim() : '',
   }))
 }
+
+// Kotak fakta di bagian Tentang dari tabel `profile_facts` (diisi lewat admin.html).
+// Mengembalikan null kalau tabel kosong atau belum dibuat, supaya situs memakai isi bawaan.
+export async function fetchProfileFacts(signal) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/profile_facts?select=*&order=sort_order.asc,created_at.asc`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    signal,
+  })
+  if (!res.ok) throw new Error(`Status ${res.status}`)
+  const rows = await res.json()
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  return rows.map((f) => ({
+    id: String(f.id),
+    label: String(f.label || ''),
+    value: String(f.value || ''),
+    icon: String(f.icon || 'grup'),
+  }))
+}

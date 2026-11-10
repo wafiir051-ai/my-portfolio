@@ -50,8 +50,9 @@ a{color:var(--accent)}
 .field .req{color:var(--accent)}
 .hint{font-size:.76rem;color:var(--faint)}
 input[type=text],input[type=email],input[type=password],input[type=url],input[type=number],input[type=search],textarea{width:100%;min-height:2.7rem;padding:.65rem .85rem;background:var(--canvas);border:1px solid var(--line-2);border-radius:6px;transition:border-color .16s var(--ease),box-shadow .16s var(--ease)}
+select{width:100%;min-height:2.7rem;padding:.65rem .85rem;background:var(--canvas);border:1px solid var(--line-2);border-radius:6px}
 textarea{min-height:6.5rem;resize:vertical}
-input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(62,216,168,.16)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(62,216,168,.16)}
 input::placeholder,textarea::placeholder{color:var(--faint)}
 
 /* login */
@@ -147,7 +148,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
   <div class="login-card">
     <span class="brand"><span>WHA</span><i></i></span>
     <h1>Masuk admin</h1>
-    <p>Kelola proyek dan prestasi yang tampil di portofolio.</p>
+    <p>Kelola proyek, prestasi, dan profil yang tampil di portofolio.</p>
     <form id="loginForm" novalidate>
       <div class="field"><label for="email">Email</label><input type="email" id="email" required autocomplete="username"></div>
       <div class="field"><label for="password">Password</label><input type="password" id="password" required autocomplete="current-password"></div>
@@ -164,6 +165,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
       <div class="tabs" role="tablist" aria-label="Bagian admin">
         <button class="tab" role="tab" id="tab-projects" aria-controls="panel-projects" aria-selected="true">Proyek <span class="count" id="count-projects">0</span></button>
         <button class="tab" role="tab" id="tab-achievements" aria-controls="panel-achievements" aria-selected="false">Prestasi <span class="count" id="count-achievements">0</span></button>
+        <button class="tab" role="tab" id="tab-facts" aria-controls="panel-facts" aria-selected="false">Profil <span class="count" id="count-facts">0</span></button>
       </div>
       <div class="bar__actions">
         <a class="btn btn--line btn--sm" href="/" target="_blank" rel="noopener">Lihat situs</a>
@@ -193,6 +195,15 @@ dialog[open]{animation:dlg .22s var(--ease)}
       </div>
       <div id="achievementSetup" hidden></div>
       <div class="list" id="achievementList"></div>
+    </section>
+
+    <section id="panel-facts" role="tabpanel" aria-labelledby="tab-facts" hidden>
+      <div class="head">
+        <div><h1>Profil</h1><p>Kotak fakta di bagian Tentang: lokasi, sekolah, peran, organisasi, dan lainnya. Astra juga ikut membacanya.</p></div>
+        <div class="tools"><button class="btn btn--primary" id="addFact" type="button">+ Tambah kotak</button></div>
+      </div>
+      <div id="factSetup" hidden></div>
+      <div class="list" id="factList"></div>
     </section>
   </main>
 </div>
@@ -225,11 +236,13 @@ dialog[open]{animation:dlg .22s var(--ease)}
   var SUPABASE_URL = "https://erfuemuloqptttrbccmw.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZnVlbXVsb3FwdHR0cmJjY213Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4MDk4OTgsImV4cCI6MjEwMTM4NTg5OH0.NRk5Ve1I6s71Zw1RAd10IFrXlI7ivySC3LDeQRb68ko";
   var SETUP_SQL = "-- Tabel prestasi untuk portofolio + bucket gambar, dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n--\n-- PENTING (keamanan): policy tulis di bawah memakai peran \"authenticated\", yaitu\n-- siapa pun yang punya akun di project ini. Matikan pendaftaran publik di\n-- Authentication > Sign In / Providers > \"Allow new users to sign up\", supaya\n-- hanya akunmu yang bisa login ke /admin.\n\ncreate table if not exists public.achievements (\n  id uuid primary key default gen_random_uuid(),\n  title text not null,\n  note text,\n  year integer,\n  image_url text,\n  sort_order integer not null default 999,\n  created_at timestamptz not null default now()\n);\n\nalter table public.achievements enable row level security;\n\ndrop policy if exists \"achievements read\" on public.achievements;\ncreate policy \"achievements read\" on public.achievements\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"achievements insert\" on public.achievements;\ncreate policy \"achievements insert\" on public.achievements\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"achievements update\" on public.achievements;\ncreate policy \"achievements update\" on public.achievements\n  for update to authenticated using (true) with check (true);\n\ndrop policy if exists \"achievements delete\" on public.achievements;\ncreate policy \"achievements delete\" on public.achievements\n  for delete to authenticated using (true);\n\n-- Bucket gambar prestasi (publik dibaca, hanya admin yang menulis).\ninsert into storage.buckets (id, name, public)\nvalues ('achievements', 'achievements', true)\non conflict (id) do update set public = true;\n\ndrop policy if exists \"achievements files read\" on storage.objects;\ncreate policy \"achievements files read\" on storage.objects\n  for select to anon, authenticated using (bucket_id = 'achievements');\n\ndrop policy if exists \"achievements files insert\" on storage.objects;\ncreate policy \"achievements files insert\" on storage.objects\n  for insert to authenticated with check (bucket_id = 'achievements');\n\ndrop policy if exists \"achievements files update\" on storage.objects;\ncreate policy \"achievements files update\" on storage.objects\n  for update to authenticated using (bucket_id = 'achievements') with check (bucket_id = 'achievements');\n\ndrop policy if exists \"achievements files delete\" on storage.objects;\ncreate policy \"achievements files delete\" on storage.objects\n  for delete to authenticated using (bucket_id = 'achievements');\n\n-- Isi awal: prestasi hadroh dan LKS (gambarnya sudah ada di situs).\ninsert into public.achievements (title, note, year, image_url, sort_order)\nselect v.title, v.note, v.year, v.image_url, v.sort_order\nfrom (values\n  ('Terbaik 1 Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek',\n   'Saat kelas 9, bersama Tim Hadroh SMPIT Insan Mandiri Greenville',\n   2025, '/prestasi/hadroh-baf-2025.webp', 1),\n  ('Peserta LKS Tingkat Provinsi Jawa Barat 2026, bidang Robot Bergerak Otonom',\n   'Mewakili Kab. Subang, 10 sampai 11 Juni 2026 di SMK Negeri 1 Karawang',\n   2026, '/prestasi/lks-jabar-2026.jpg', 2)\n) as v(title, note, year, image_url, sort_order)\nwhere not exists (select 1 from public.achievements);\n";
+  var FACTS_SQL = "-- Kotak fakta di bagian Tentang (lokasi, sekolah, peran, dan seterusnya), dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n-- Aman dijalankan ulang: tabel dan isi awal tidak digandakan.\n\ncreate table if not exists public.profile_facts (\n  id uuid primary key default gen_random_uuid(),\n  label text not null,\n  value text not null,\n  icon text not null default 'grup',\n  sort_order integer not null default 999,\n  created_at timestamptz not null default now()\n);\n\nalter table public.profile_facts enable row level security;\n\ndrop policy if exists \"profile_facts read\" on public.profile_facts;\ncreate policy \"profile_facts read\" on public.profile_facts\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"profile_facts insert\" on public.profile_facts;\ncreate policy \"profile_facts insert\" on public.profile_facts\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"profile_facts update\" on public.profile_facts;\ncreate policy \"profile_facts update\" on public.profile_facts\n  for update to authenticated using (true) with check (true);\n\ndrop policy if exists \"profile_facts delete\" on public.profile_facts;\ncreate policy \"profile_facts delete\" on public.profile_facts\n  for delete to authenticated using (true);\n\n-- Isi awal: sama dengan yang tampil sekarang. Hanya diisi kalau tabel masih kosong.\ninsert into public.profile_facts (label, value, icon, sort_order)\nselect v.label, v.value, v.icon, v.sort_order\nfrom (values\n  ('Lokasi', 'Subang, Jawa Barat', 'lokasi', 1),\n  ('Sekolah', 'SMKIT Assyifa Boarding School, kelas 11', 'sekolah', 2),\n  ('Peran', 'Ketua IT Club dan Ketua Hadroh sekolah', 'grup', 3),\n  ('Organisasi', 'Pernah jadi OSIS divisi kebersihan, SMPIT Insan Mandiri Greenville', 'grup', 4),\n  ('Kepanitiaan', 'Pernah jadi anggota Danus (Dana Usaha) di acara Asfera, Assyiffa Festival Raya', 'grup', 5),\n  ('Fokus', 'Web, mobile, IoT', 'kode', 6)\n) as v(label, value, icon, sort_order)\nwhere not exists (select 1 from public.profile_facts);\n";
+  var FACT_ICONS = [['lokasi', 'Lokasi (pin)'], ['sekolah', 'Sekolah'], ['grup', 'Orang / organisasi'], ['kode', 'Kode'], ['piala', 'Penghargaan'], ['buku', 'Buku'], ['bintang', 'Bintang'], ['kerja', 'Pekerjaan'], ['tanggal', 'Kalender'], ['topi', 'Topi wisuda']];
   var BUCKET = 'achievements';
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
-  var state = { tab: 'projects', projects: [], achievements: [], q: '', achievementsMissing: false };
+  var state = { tab: 'projects', projects: [], achievements: [], facts: [], q: '', achievementsMissing: false };
 
   function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function safeUrl(u) { return /^https?:\/\//i.test(u || '') || (u || '').charAt(0) === '/' ? u : ''; }
@@ -278,17 +291,18 @@ dialog[open]{animation:dlg .22s var(--ease)}
   /* ---------- tab ---------- */
   function setTab(name) {
     state.tab = name;
-    ['projects', 'achievements'].forEach(function (n) {
+    ['projects', 'achievements', 'facts'].forEach(function (n) {
       $('#tab-' + n).setAttribute('aria-selected', String(n === name));
       $('#panel-' + n).hidden = n !== name;
     });
   }
   $('#tab-projects').addEventListener('click', function () { setTab('projects'); });
   $('#tab-achievements').addEventListener('click', function () { setTab('achievements'); });
+  $('#tab-facts').addEventListener('click', function () { setTab('facts'); });
   $('#search').addEventListener('input', function (e) { state.q = e.target.value.toLowerCase(); renderProjects(); });
 
   /* ---------- data ---------- */
-  function loadAll() { loadProjects(); loadAchievements(); }
+  function loadAll() { loadProjects(); loadAchievements(); loadFacts(); }
   function skeleton(el) { el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>'; }
 
   function loadProjects() {
@@ -296,6 +310,30 @@ dialog[open]{animation:dlg .22s var(--ease)}
     sb.from('projects').select('*').order('sort_order', { ascending: true }).then(function (r) {
       if (r.error) { $('#projectList').innerHTML = '<div class="empty"><strong>Gagal memuat proyek</strong>' + esc(r.error.message) + '</div>'; return; }
       state.projects = r.data; $('#count-projects').textContent = r.data.length; renderProjects();
+    });
+  }
+  function setupNotice(el, name, sql) {
+    el.hidden = false;
+    el.innerHTML = '<div class="notice"><h2>Tabel ' + name + ' belum dibuat</h2><ol><li>Buka Supabase, menu <b>SQL Editor</b>, lalu <b>New query</b>.</li><li>Salin SQL di bawah, tempel, lalu tekan <b>Run</b>.</li><li>Muat ulang halaman ini.</li></ol><pre class="sqlbox"></pre><button class="btn btn--primary btn--sm" type="button">Salin SQL</button></div>';
+    el.querySelector('.sqlbox').textContent = sql;
+    el.querySelector('button').addEventListener('click', function () { navigator.clipboard.writeText(sql).then(function () { toast('SQL disalin.'); }, function () { toast('Tidak bisa menyalin. Blok teksnya lalu salin manual.', 'error'); }); });
+  }
+  function isMissing(err, table) {
+    var m = err.message || '';
+    return err.code === 'PGRST205' || err.code === '42P01' || (m.indexOf(table) !== -1 && /(schema cache|does not exist)/.test(m));
+  }
+  function loadFacts() {
+    skeleton($('#factList'));
+    sb.from('profile_facts').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }).then(function (r) {
+      var setup = $('#factSetup');
+      if (r.error) {
+        $('#factList').innerHTML = '';
+        if (isMissing(r.error, 'profile_facts')) setupNotice(setup, 'profil', FACTS_SQL);
+        else $('#factList').innerHTML = '<div class="empty"><strong>Gagal memuat profil</strong>' + esc(r.error.message) + '</div>';
+        return;
+      }
+      setup.hidden = true;
+      state.facts = r.data; $('#count-facts').textContent = r.data.length; renderFacts();
     });
   }
   function loadAchievements() {
@@ -307,10 +345,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
         state.achievementsMissing = missing;
         $('#achievementList').innerHTML = '';
         if (missing) {
-          setup.hidden = false;
-          setup.innerHTML = '<div class="notice"><h2>Tabel prestasi belum dibuat</h2><ol><li>Buka Supabase, menu <b>SQL Editor</b>, lalu <b>New query</b>.</li><li>Salin SQL di bawah, tempel, lalu tekan <b>Run</b>.</li><li>Muat ulang halaman ini.</li></ol><pre id="sqlBox"></pre><button class="btn btn--primary btn--sm" id="copySql" type="button">Salin SQL</button></div>';
-          $('#sqlBox').textContent = SETUP_SQL;
-          $('#copySql').addEventListener('click', function () { navigator.clipboard.writeText(SETUP_SQL).then(function () { toast('SQL disalin.'); }, function () { toast('Tidak bisa menyalin. Blok teksnya lalu salin manual.', 'error'); }); });
+          setupNotice(setup, 'prestasi', SETUP_SQL);
         } else {
           $('#achievementList').innerHTML = '<div class="empty"><strong>Gagal memuat prestasi</strong>' + esc(r.error.message) + '</div>';
         }
@@ -385,6 +420,27 @@ dialog[open]{animation:dlg .22s var(--ease)}
     });
   }
 
+  function renderFacts() {
+    var list = $('#factList');
+    if (!state.facts.length) { list.innerHTML = '<div class="empty"><strong>Belum ada kotak</strong>Tekan "Tambah kotak". Selama kosong, situs memakai isi bawaan.</div>'; return; }
+    list.innerHTML = '';
+    state.facts.forEach(function (f, idx) {
+      var el = document.createElement('article'); el.className = 'item';
+      el.innerHTML =
+        '<div class="item__order"></div>' +
+        '<div class="item__body"><div class="item__cat">' + esc(f.label) + '</div>' +
+        '<h3 class="item__title">' + esc(f.value) + '</h3></div>' +
+        '<div class="item__actions"></div>';
+      var order = el.querySelector('.item__order');
+      order.appendChild(orderBtn('up', 'Naikkan', idx === 0, function () { move('profile_facts', state.facts, idx, -1); }));
+      order.appendChild(orderBtn('down', 'Turunkan', idx === state.facts.length - 1, function () { move('profile_facts', state.facts, idx, 1); }));
+      var act = el.querySelector('.item__actions');
+      act.appendChild(textBtn('Edit', 'btn btn--line btn--sm', function () { openFactForm(f); }));
+      act.appendChild(textBtn('Hapus', 'btn btn--danger btn--sm', function () { removeFact(f); }));
+      list.appendChild(el);
+    });
+  }
+
   function orderBtn(dir, label, disabled, fn) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'icon-btn'; b.setAttribute('aria-label', label); b.innerHTML = ICON[dir]; b.disabled = disabled; b.addEventListener('click', fn); return b;
   }
@@ -397,7 +453,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
       var bad = rs.filter(function (r) { return r.error; })[0];
       if (bad) { toast('Gagal mengubah urutan: ' + bad.error.message, 'error'); }
       else toast('Urutan disimpan.');
-      table === 'projects' ? loadProjects() : loadAchievements();
+      table === 'projects' ? loadProjects() : table === 'profile_facts' ? loadFacts() : loadAchievements();
     });
   }
 
@@ -426,7 +482,9 @@ dialog[open]{animation:dlg .22s var(--ease)}
   function field(id, label, opts) {
     opts = opts || {};
     var req = opts.req ? ' <span class="req">*</span>' : '';
-    var control = opts.area
+    var control = opts.options
+      ? '<select id="' + id + '">' + opts.options.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === opts.val ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>'
+      : opts.area
       ? '<textarea id="' + id + '" ' + (opts.req ? 'required' : '') + ' placeholder="' + esc(opts.ph || '') + '">' + esc(opts.val || '') + '</textarea>'
       : '<input type="' + (opts.type || 'text') + '" id="' + id + '" ' + (opts.req ? 'required' : '') + ' value="' + esc(opts.val || '') + '" placeholder="' + esc(opts.ph || '') + '"' + (opts.attrs || '') + '>';
     return '<div class="field"><label for="' + id + '">' + label + req + '</label>' + control + (opts.hint ? '<span class="hint">' + opts.hint + '</span>' : '') + '</div>';
@@ -470,6 +528,31 @@ dialog[open]{animation:dlg .22s var(--ease)}
     });
   }
   $('#addProject').addEventListener('click', function () { openProjectForm(null); });
+
+  /* ---------- profil (kotak fakta) ---------- */
+  function openFactForm(f) {
+    openForm(f ? 'Edit kotak profil' : 'Tambah kotak profil',
+      field('f_label', 'Judul kecil', { req: true, val: f && f.label, ph: 'Contoh: Peran' }) +
+      field('f_value', 'Isi', { req: true, area: true, val: f && f.value, ph: 'Contoh: Ketua IT Club dan Ketua Hadroh sekolah' }) +
+      field('f_icon', 'Ikon', { options: FACT_ICONS, val: f ? f.icon : 'grup' }),
+      function () {
+        var label = $('#f_label').value, value = $('#f_value').value;
+        need(label, 'Judul kecil wajib diisi.'); need(value, 'Isi wajib diisi.');
+        var payload = { label: label.trim(), value: value.trim(), icon: $('#f_icon').value };
+        var q = f ? sb.from('profile_facts').update(payload).eq('id', f.id) : sb.from('profile_facts').insert(Object.assign({ sort_order: state.facts.length + 1 }, payload));
+        return q.then(function (r) { if (r.error) throw r.error; toast(f ? 'Kotak diperbarui.' : 'Kotak ditambahkan.'); loadFacts(); });
+      });
+  }
+  function removeFact(f) {
+    confirmDialog('Hapus kotak?', '"' + f.label + ': ' + f.value + '" akan dihapus dari bagian Tentang.').then(function (ok) {
+      if (!ok) return;
+      sb.from('profile_facts').delete().eq('id', f.id).then(function (r) {
+        if (r.error) { toast('Gagal menghapus: ' + r.error.message, 'error'); return; }
+        toast('Kotak dihapus.'); loadFacts();
+      });
+    });
+  }
+  $('#addFact').addEventListener('click', function () { openFactForm(null); });
 
   /* ---------- prestasi + gambar ---------- */
   var img = { file: null, remove: false, current: '' };

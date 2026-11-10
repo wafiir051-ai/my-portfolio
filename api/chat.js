@@ -34,6 +34,30 @@ async function getAchievements() {
   }
 }
 
+// Kotak fakta di bagian Tentang (lokasi, sekolah, peran, ...), diedit lewat /admin.
+async function getProfileFacts() {
+  try {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_ANON_KEY;
+    const r = await fetch(
+      `${url}/rest/v1/profile_facts?select=label,value&order=sort_order.asc&limit=20`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return Array.isArray(rows) && rows.length ? rows : null;
+  } catch {
+    return null;
+  }
+}
+
+function bagianFakta(rows) {
+  if (!rows) return "";
+  const clip = (v, n) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+  const daftar = rows.map((f) => `- ${clip(f.label, 60)}: ${clip(f.value, 200)}`).join("\n");
+  return `\nFAKTA PROFIL TERBARU (diambil dari bagian Tentang di portofolio; kalau berbeda dengan keterangan lain di atas, daftar ini yang dipakai):\n${daftar}`;
+}
+
 const bagianPrestasiBawaan = `PRESTASI: Terbaik 1 (juara 1) Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek, bersama Tim Hadroh SMPIT Insan Mandiri Greenville, pada tahun 2025 saat Waffir kelas 9 (SMP). Sebutkan ini kalau pengunjung bertanya soal prestasi, lomba, atau hadroh; jangan menambah detail lain (nilai, jumlah peserta, nama lomba lain) yang tidak tertulis di sini.
 LOMBA LKS: Waffir lolos LKS (Lomba Kompetensi Siswa) sampai tingkat kabupaten, mewakili Kab. Subang, bidang Robot Bergerak Otonom (Autonomous Mobile Robotics), tahun 2026. Ia tidak juara di LKS dan tidak lolos ke tingkat provinsi; jangan mengaku ia menang atau lolos lebih jauh. Jangan menambah detail lain yang tidak tertulis di sini.`;
 
@@ -48,7 +72,7 @@ ${daftar}
 Sebutkan ini kalau pengunjung bertanya soal prestasi, lomba, atau penghargaan. Pakai kata persis seperti di daftar: jangan menyebut Waffir juara atau menang kalau tidak tertulis "juara", "terbaik", atau "menang", dan jangan menambah detail (nilai, jumlah peserta, tingkat, lomba lain) yang tidak tertulis.`;
 }
 
-const buatPrompt = (AGE, PRESTASI) => `Kamu adalah Astra, robot asisten di portofolio Waffir.
+const buatPrompt = (AGE, PRESTASI, FAKTA) => `Kamu adalah Astra, robot asisten di portofolio Waffir.
 Kamu adalah Astra, BUKAN Waffir. Jangan pernah mengaku sebagai Waffir; bicara tentang Waffir sebagai orang ketiga.
 Jawab dalam bahasa Indonesia yang santai, ramah, singkat (maks 4 kalimat).
 Hanya bahas tentang Waffir dan seputarnya. Jika di luar itu, arahkan kembali dengan sopan.
@@ -57,7 +81,7 @@ Jangan mengarang fakta yang tidak ada di bawah ini.
 
 PROFIL: Waffir, ${AGE} tahun, dari Subang, siswa SMKIT Assyifa Boarding School, Ketua IT Club dan Ketua Hadroh di sekolahnya.
 IT CLUB: Waffir adalah Ketua IT Club di sekolahnya. IT Club terdiri dari empat divisi: cyber security, game dev, web dev, dan robotika. Waffir bukan sekadar ketua tim robotika; robotika hanya salah satu divisi IT Club. Jangan menambah detail lain (jumlah anggota, tahun jabatan, kegiatan) yang tidak tertulis di sini.
-${PRESTASI}
+${PRESTASI}${FAKTA}
 ORGANISASI: Waffir pernah menjadi anggota OSIS di SMPIT Insan Mandiri Greenville, divisi kebersihan. Jangan menambah detail lain (jabatan, tahun) yang tidak tertulis di sini.
 KEPANITIAAN: Waffir pernah menjadi anggota Danus (Dana Usaha) di acara Asfera (Assyiffa Festival Raya) yang baru-baru ini diadakan. Danus itu seksi dana usaha di kepanitiaan acara tersebut. Jangan menambah detail lain (jabatan, tahun, hasil) yang tidak tertulis di sini.
 TEMPAT TINGGAL: Tempat tinggal asli (rumah) Waffir ada di Perumahan Mutiara Darussalam, Pitara, Kecamatan Pancoran Mas, Kota Depok, Jawa Barat, Indonesia. Jika pengunjung bertanya Waffir tinggal di mana, rumah aslinya di mana, atau alamatnya, jawab dengan alamat itu. Waffir bersekolah di SMKIT Assyifa Boarding School, Subang, dan di portofolio ia disebut berasal dari Subang; sebut ini hanya kalau relevan. Jangan menambah detail alamat di luar yang tertulis di sini (nomor rumah, RT/RW, kode pos, dan sebagainya tidak diketahui).
@@ -71,7 +95,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { message, history = [] } = req.body || {};
-  const [umur, prestasi] = await Promise.all([getAge(), getAchievements()]);
+  const [umur, prestasi, fakta] = await Promise.all([getAge(), getAchievements(), getProfileFacts()]);
   const AGE = umur ?? "masih remaja";
   if (!message || typeof message !== "string" || message.length > 500)
     return res.status(400).json({ error: "Pesan tidak valid" });
@@ -92,7 +116,7 @@ module.exports = async function handler(req, res) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: buatPrompt(AGE, bagianPrestasi(prestasi)) }] },
+          systemInstruction: { parts: [{ text: buatPrompt(AGE, bagianPrestasi(prestasi), bagianFakta(fakta)) }] },
           contents,
           generationConfig: { maxOutputTokens: 800, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),

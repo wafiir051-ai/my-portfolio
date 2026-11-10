@@ -2379,9 +2379,16 @@ main section[id],
   }
 }
 
-/* Enam kotak fakta di layar lebar: tiga kolom, dua baris. */
+/* Kotak fakta di layar lebar: tiga per baris; sisa di baris terakhir melebar. */
 @media (min-width: 1101px) {
   .facts__tile {
     grid-column: span 2;
+  }
+  .facts__tile:last-child:nth-child(3n + 1) {
+    grid-column: span 6;
+  }
+  .facts__tile:last-child:nth-child(3n + 2),
+  .facts__tile:nth-last-child(2):nth-child(3n + 1) {
+    grid-column: span 3;
   }
 }
