@@ -204,11 +204,13 @@ export default function BackgroundAudio() {
     }
     window.addEventListener('wha:enter', onEnter)
     window.addEventListener('wha:play', onPlay)
+    // Lagu tetap jalan saat tab ditinggalkan. Kalau browser (biasanya di HP) menjeda
+    // sendiri di latar belakang, lanjutkan lagi begitu tab dibuka, kecuali pengguna
+    // memang menjedanya.
     const onVisibility = () => {
       const p = playerRef.current
-      if (!p || !p.getPlayerState) return
-      if (document.hidden) p.pauseVideo()
-      else if (!userPausedRef.current && wantPlayRef.current && p.getPlayerState() === 2) p.playVideo()
+      if (!p || !p.getPlayerState || document.hidden) return
+      if (!userPausedRef.current && wantPlayRef.current && p.getPlayerState() === 2) p.playVideo()
     }
     document.addEventListener('visibilitychange', onVisibility)
     return () => {
