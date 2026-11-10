@@ -81,3 +81,24 @@ export async function fetchProfileCard(signal) {
     photo: typeof c.photo_url === 'string' && c.photo_url.trim() ? c.photo_url.trim() : '',
   }
 }
+
+// Daftar lagu latar dari tabel `music_tracks` (diisi lewat admin.html). Mengembalikan null
+// kalau tabel kosong atau belum dibuat, supaya pemutar memakai daftar bawaan.
+export async function fetchMusicTracks(signal) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/music_tracks?select=*&order=sort_order.asc,created_at.asc`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    signal,
+  })
+  if (!res.ok) throw new Error(`Status ${res.status}`)
+  const rows = await res.json()
+  if (!Array.isArray(rows)) return null
+  const list = rows
+    .filter((t) => typeof t.youtube_id === 'string' && /^[\w-]{11}$/.test(t.youtube_id))
+    .map((t) => ({
+      id: t.youtube_id,
+      title: String(t.title || ''),
+      artist: String(t.artist || ''),
+      start: Math.max(0, Number(t.start_seconds) || 0),
+    }))
+  return list.length ? list : null
+}

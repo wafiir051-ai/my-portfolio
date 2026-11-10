@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ElasticSlider from './reactbits/ElasticSlider/ElasticSlider'
+import { fetchMusicTracks } from '../lib/projectsApi'
 
 // Pemutar musik latar: pemutar resmi YouTube (IFrame Player API) dengan kontrol
 // di bilah atas. Pemutar disiapkan sejak halaman dibuka, tapi musik baru diputar
@@ -7,12 +8,12 @@ import ElasticSlider from './reactbits/ElasticSlider/ElasticSlider'
 // layar pembuka (peristiwa "wha:enter") adalah interaksi yang membuka izin suara
 // dari browser. Kalau suara tetap ditolak, musik berjalan tanpa suara lalu
 // dinyalakan pada interaksi berikutnya.
-const TRACKS = [
+// Daftar bawaan; dipakai kalau tabel music_tracks kosong atau belum dibuat.
+const DEFAULT_TRACKS = [
   { id: 'zA4dYHcLGDk', title: 'Sepanjang Hidup', artist: 'Maher Zain, cover Maros Al Aswa', start: 117 },
   { id: 'rgCDQeOr_9Y', title: 'Gandrung Nabi (Tombo Ati)', artist: 'MbahPur Media' },
   { id: 'a1fiDmzlV7c', title: 'Ya Rasulallah Qolby Yuhibbak', artist: 'Cover Ashabul Fatroh, Al Mustahibbin' },
 ]
-const PLAYLIST = TRACKS.map((t) => t.id)
 const VOLUME = 60
 
 let apiPromise
@@ -89,6 +90,7 @@ const I = {
 
 export default function BackgroundAudio() {
   const frameRef = useRef(null)
+  const tracksRef = useRef(DEFAULT_TRACKS)
   const autoMutedRef = useRef(false)
   const playerRef = useRef(null)
   const startedRef = useRef(false)
@@ -104,6 +106,7 @@ export default function BackgroundAudio() {
   const [playing, setPlaying] = useState(false)
   const [volume, setVolume] = useState(VOLUME)
   const [index, setIndex] = useState(0)
+  const [tracks, setTracks] = useState(DEFAULT_TRACKS)
   const [pos, setPos] = useState(0)
   const [dur, setDur] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -136,7 +139,8 @@ export default function BackgroundAudio() {
     const p = playerRef.current
     if (!p || !p.loadPlaylist) return
     userPausedRef.current = false
-    p.loadPlaylist({ playlist: PLAYLIST, index: 0, startSeconds: TRACKS[0].start })
+    const list = tracksRef.current
+    p.loadPlaylist({ playlist: list.map((t) => t.id), index: 0, startSeconds: list[0].start })
     p.setLoop(true)
     unmuteNow()
     // Belum jalan setelah 1,8 detik berarti browser menolak suara.
@@ -149,6 +153,15 @@ export default function BackgroundAudio() {
     if (startedRef.current) return
     startedRef.current = true
     setStarted(true)
+    // Daftar lagu dari admin; kalau lambat atau gagal dalam 3 detik, pakai daftar bawaan.
+    const rows = await Promise.race([
+      fetchMusicTracks().catch(() => null),
+      new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
+    ])
+    if (rows) {
+      tracksRef.current = rows
+      setTracks(rows)
+    }
     const YT = await loadApi()
     if (!frameRef.current) return
     playerRef.current = new YT.Player(frameRef.current, {
@@ -156,7 +169,8 @@ export default function BackgroundAudio() {
         onReady: (e) => {
           e.target.setVolume(volumeRef.current)
           // Disiapkan saja; baru diputar setelah pemuatan selesai (peristiwa "wha:play").
-          e.target.cuePlaylist({ playlist: PLAYLIST, index: 0, startSeconds: TRACKS[0].start })
+          const list = tracksRef.current
+          e.target.cuePlaylist({ playlist: list.map((t) => t.id), index: 0, startSeconds: list[0].start })
           e.target.setLoop(true)
           playerReadyRef.current = true
           if (wantPlayRef.current) doPlay()
@@ -167,10 +181,11 @@ export default function BackgroundAudio() {
           const i = e.target.getPlaylistIndex?.()
           if (typeof i === 'number' && i >= 0) {
             setIndex(i)
-            // Lagu pertama selalu mulai dari lirik "Oh sepanjang hidup bersamamu" (detik 117),
-            // juga saat kembali ke sana lewat tombol atau saat daftar berulang.
-            if (e.data === 1 && i === 0 && lastIndexRef.current !== 0 && TRACKS[0].start) {
-              if ((e.target.getCurrentTime?.() || 0) < TRACKS[0].start - 5) e.target.seekTo(TRACKS[0].start, true)
+            // Tiap lagu mulai dari detik yang diatur di admin, juga saat berpindah lewat tombol
+            // atau saat daftar berulang.
+            const startAt = tracksRef.current[i]?.start || 0
+            if (e.data === 1 && lastIndexRef.current !== i && startAt) {
+              if ((e.target.getCurrentTime?.() || 0) < startAt - 3) e.target.seekTo(startAt, true)
             }
             if (e.data === 1) lastIndexRef.current = i
           }
@@ -289,7 +304,7 @@ export default function BackgroundAudio() {
     setTimeout(() => (seekingRef.current = false), 400)
   }
 
-  const track = TRACKS[index] || TRACKS[0]
+  const track = tracks[index] || tracks[0]
   const art = started ? (
     <img className="mp__art" src={`https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} alt="" width="120" height="120" draggable="false" />
   ) : (
@@ -403,7 +418,7 @@ export default function BackgroundAudio() {
             title="Pemutar musik latar"
             width="200"
             height="200"
-            src={`https://www.youtube.com/embed/${PLAYLIST[0]}?enablejsapi=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&origin=${encodeURIComponent(window.location.origin)}`}
+            src={`https://www.youtube.com/embed/${DEFAULT_TRACKS[0].id}?enablejsapi=1&controls=0&disablekb=1&fs=0&playsinline=1&rel=0&iv_load_policy=3&origin=${encodeURIComponent(window.location.origin)}`}
             allow="autoplay; encrypted-media; picture-in-picture"
             referrerPolicy="strict-origin-when-cross-origin"
           />

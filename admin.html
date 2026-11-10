@@ -148,7 +148,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
   <div class="login-card">
     <span class="brand"><span>WHA</span><i></i></span>
     <h1>Masuk admin</h1>
-    <p>Kelola proyek, prestasi, dan profil yang tampil di portofolio.</p>
+    <p>Kelola proyek, prestasi, profil, dan musik yang tampil di portofolio.</p>
     <form id="loginForm" novalidate>
       <div class="field"><label for="email">Email</label><input type="email" id="email" required autocomplete="username"></div>
       <div class="field"><label for="password">Password</label><input type="password" id="password" required autocomplete="current-password"></div>
@@ -166,6 +166,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
         <button class="tab" role="tab" id="tab-projects" aria-controls="panel-projects" aria-selected="true">Proyek <span class="count" id="count-projects">0</span></button>
         <button class="tab" role="tab" id="tab-achievements" aria-controls="panel-achievements" aria-selected="false">Prestasi <span class="count" id="count-achievements">0</span></button>
         <button class="tab" role="tab" id="tab-facts" aria-controls="panel-facts" aria-selected="false">Profil <span class="count" id="count-facts">0</span></button>
+        <button class="tab" role="tab" id="tab-music" aria-controls="panel-music" aria-selected="false">Musik <span class="count" id="count-music">0</span></button>
       </div>
       <div class="bar__actions">
         <a class="btn btn--line btn--sm" href="/" target="_blank" rel="noopener">Lihat situs</a>
@@ -207,6 +208,15 @@ dialog[open]{animation:dlg .22s var(--ease)}
       <div id="factSetup" hidden></div>
       <div class="list" id="factList"></div>
     </section>
+
+    <section id="panel-music" role="tabpanel" aria-labelledby="tab-music" hidden>
+      <div class="head">
+        <div><h1>Musik</h1><p>Lagu latar di bilah atas, diputar berurutan dari atas ke bawah. Tiap lagu bisa diatur mulai dari detik berapa.</p></div>
+        <div class="tools"><button class="btn btn--primary" id="addTrack" type="button">+ Tambah lagu</button></div>
+      </div>
+      <div id="musicSetup" hidden></div>
+      <div class="list" id="musicList"></div>
+    </section>
   </main>
 </div>
 
@@ -241,11 +251,12 @@ dialog[open]{animation:dlg .22s var(--ease)}
   var FACTS_SQL = "-- Kotak fakta di bagian Tentang (lokasi, sekolah, peran, dan seterusnya), dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n-- Aman dijalankan ulang: tabel dan isi awal tidak digandakan.\n\ncreate table if not exists public.profile_facts (\n  id uuid primary key default gen_random_uuid(),\n  label text not null,\n  value text not null,\n  icon text not null default 'grup',\n  sort_order integer not null default 999,\n  created_at timestamptz not null default now()\n);\n\nalter table public.profile_facts enable row level security;\n\ndrop policy if exists \"profile_facts read\" on public.profile_facts;\ncreate policy \"profile_facts read\" on public.profile_facts\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"profile_facts insert\" on public.profile_facts;\ncreate policy \"profile_facts insert\" on public.profile_facts\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"profile_facts update\" on public.profile_facts;\ncreate policy \"profile_facts update\" on public.profile_facts\n  for update to authenticated using (true) with check (true);\n\ndrop policy if exists \"profile_facts delete\" on public.profile_facts;\ncreate policy \"profile_facts delete\" on public.profile_facts\n  for delete to authenticated using (true);\n\n-- Isi awal: sama dengan yang tampil sekarang. Hanya diisi kalau tabel masih kosong.\ninsert into public.profile_facts (label, value, icon, sort_order)\nselect v.label, v.value, v.icon, v.sort_order\nfrom (values\n  ('Lokasi', 'Subang, Jawa Barat', 'lokasi', 1),\n  ('Sekolah', 'SMKIT Assyifa Boarding School, kelas 11', 'sekolah', 2),\n  ('Peran', 'Ketua IT Club dan Ketua Hadroh sekolah', 'grup', 3),\n  ('Organisasi', 'Pernah jadi OSIS divisi kebersihan, SMPIT Insan Mandiri Greenville', 'grup', 4),\n  ('Kepanitiaan', 'Pernah jadi anggota Danus (Dana Usaha) di acara Asfera, Assyiffa Festival Raya', 'grup', 5),\n  ('Fokus', 'Web, mobile, IoT', 'kode', 6)\n) as v(label, value, icon, sort_order)\nwhere not exists (select 1 from public.profile_facts);\n";
   var FACT_ICONS = [['lokasi', 'Lokasi (pin)'], ['sekolah', 'Sekolah'], ['grup', 'Orang / organisasi'], ['kode', 'Kode'], ['piala', 'Penghargaan'], ['buku', 'Buku'], ['bintang', 'Bintang'], ['kerja', 'Pekerjaan'], ['tanggal', 'Kalender'], ['topi', 'Topi wisuda']];
   var CARD_SQL = "-- Kartu profil di hero (foto, nama, judul, handle, status), dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n-- Aman dijalankan ulang. Foto yang diunggah memakai bucket \"achievements\"\n-- (dari achievements.sql), jadi jalankan file itu lebih dulu.\n\ncreate table if not exists public.profile_card (\n  id integer primary key default 1 check (id = 1),\n  name text not null,\n  title text not null,\n  handle text,\n  status text,\n  photo_url text,\n  updated_at timestamptz not null default now()\n);\n\nalter table public.profile_card enable row level security;\n\ndrop policy if exists \"profile_card read\" on public.profile_card;\ncreate policy \"profile_card read\" on public.profile_card\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"profile_card insert\" on public.profile_card;\ncreate policy \"profile_card insert\" on public.profile_card\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"profile_card update\" on public.profile_card;\ncreate policy \"profile_card update\" on public.profile_card\n  for update to authenticated using (true) with check (true);\n\n-- Isi awal: sama dengan kartu yang tampil sekarang.\ninsert into public.profile_card (id, name, title, handle, status, photo_url)\nvalues (1, 'Waffir Hasan Alkamiil', 'Full-Stack & IoT Developer', 'wafiir051-ai', 'Terbuka untuk proyek', '/malioboro.jpg')\non conflict (id) do nothing;\n";
+  var MUSIC_SQL = "-- Daftar lagu latar (pemutar di bilah atas), dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n-- Aman dijalankan ulang: tabel dan isi awal tidak digandakan.\n\ncreate table if not exists public.music_tracks (\n  id uuid primary key default gen_random_uuid(),\n  title text not null,\n  artist text,\n  youtube_id text not null,\n  start_seconds integer not null default 0 check (start_seconds >= 0),\n  sort_order integer not null default 999,\n  created_at timestamptz not null default now()\n);\n\nalter table public.music_tracks enable row level security;\n\ndrop policy if exists \"music_tracks read\" on public.music_tracks;\ncreate policy \"music_tracks read\" on public.music_tracks\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"music_tracks insert\" on public.music_tracks;\ncreate policy \"music_tracks insert\" on public.music_tracks\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"music_tracks update\" on public.music_tracks;\ncreate policy \"music_tracks update\" on public.music_tracks\n  for update to authenticated using (true) with check (true);\n\ndrop policy if exists \"music_tracks delete\" on public.music_tracks;\ncreate policy \"music_tracks delete\" on public.music_tracks\n  for delete to authenticated using (true);\n\n-- Isi awal: tiga lagu yang diputar sekarang. Hanya diisi kalau tabel masih kosong.\ninsert into public.music_tracks (title, artist, youtube_id, start_seconds, sort_order)\nselect v.title, v.artist, v.youtube_id, v.start_seconds, v.sort_order\nfrom (values\n  ('Sepanjang Hidup', 'Maher Zain, cover Maros Al Aswa', 'zA4dYHcLGDk', 117, 1),\n  ('Gandrung Nabi (Tombo Ati)', 'MbahPur Media', 'rgCDQeOr_9Y', 0, 2),\n  ('Ya Rasulallah Qolby Yuhibbak', 'Cover Ashabul Fatroh, Al Mustahibbin', 'a1fiDmzlV7c', 0, 3)\n) as v(title, artist, youtube_id, start_seconds, sort_order)\nwhere not exists (select 1 from public.music_tracks);\n";
   var BUCKET = 'achievements';
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
-  var state = { tab: 'projects', projects: [], achievements: [], facts: [], card: null, q: '', achievementsMissing: false };
+  var state = { tab: 'projects', projects: [], achievements: [], facts: [], card: null, tracks: [], q: '', achievementsMissing: false };
 
   function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function safeUrl(u) { return /^https?:\/\//i.test(u || '') || (u || '').charAt(0) === '/' ? u : ''; }
@@ -294,7 +305,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
   /* ---------- tab ---------- */
   function setTab(name) {
     state.tab = name;
-    ['projects', 'achievements', 'facts'].forEach(function (n) {
+    ['projects', 'achievements', 'facts', 'music'].forEach(function (n) {
       $('#tab-' + n).setAttribute('aria-selected', String(n === name));
       $('#panel-' + n).hidden = n !== name;
     });
@@ -302,10 +313,11 @@ dialog[open]{animation:dlg .22s var(--ease)}
   $('#tab-projects').addEventListener('click', function () { setTab('projects'); });
   $('#tab-achievements').addEventListener('click', function () { setTab('achievements'); });
   $('#tab-facts').addEventListener('click', function () { setTab('facts'); });
+  $('#tab-music').addEventListener('click', function () { setTab('music'); });
   $('#search').addEventListener('input', function (e) { state.q = e.target.value.toLowerCase(); renderProjects(); });
 
   /* ---------- data ---------- */
-  function loadAll() { loadProjects(); loadAchievements(); loadFacts(); loadCard(); }
+  function loadAll() { loadProjects(); loadAchievements(); loadFacts(); loadCard(); loadMusic(); }
   function skeleton(el) { el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>'; }
 
   function loadProjects() {
@@ -352,6 +364,83 @@ dialog[open]{animation:dlg .22s var(--ease)}
     el.querySelector('.item__actions').appendChild(textBtn('Edit kartu', 'btn btn--line btn--sm', function () { openCardForm(c); }));
     box.appendChild(el);
   }
+  function loadMusic() {
+    skeleton($('#musicList'));
+    sb.from('music_tracks').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }).then(function (r) {
+      var setup = $('#musicSetup');
+      if (r.error) {
+        $('#musicList').innerHTML = '';
+        if (isMissing(r.error, 'music_tracks')) setupNotice(setup, 'musik', MUSIC_SQL);
+        else $('#musicList').innerHTML = '<div class="empty"><strong>Gagal memuat musik</strong>' + esc(r.error.message) + '</div>';
+        return;
+      }
+      setup.hidden = true;
+      state.tracks = r.data; $('#count-music').textContent = r.data.length; renderMusic();
+    });
+  }
+  function fmtTime(sec) { sec = Math.max(0, Math.floor(sec || 0)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+  function parseTime(v) {
+    v = String(v || '').trim();
+    if (!v) return 0;
+    if (/^\d+$/.test(v)) return parseInt(v, 10);
+    var m = v.match(/^(\d+):([0-5]?\d)$/);
+    if (m) return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    throw new Error('Waktu mulai ditulis dalam detik (117) atau menit:detik (1:57).');
+  }
+  function parseYoutubeId(v) {
+    v = String(v || '').trim();
+    if (/^[\w-]{11}$/.test(v)) return v;
+    var m = v.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
+    if (m) return m[1];
+    throw new Error('Link YouTube tidak dikenali. Tempel link videonya atau ID 11 karakter.');
+  }
+  function renderMusic() {
+    var list = $('#musicList');
+    if (!state.tracks.length) { list.innerHTML = '<div class="empty"><strong>Belum ada lagu</strong>Tekan "Tambah lagu". Selama kosong, pemutar memakai tiga lagu bawaan.</div>'; return; }
+    list.innerHTML = '';
+    state.tracks.forEach(function (t, idx) {
+      var el = document.createElement('article'); el.className = 'item item--thumb';
+      el.innerHTML =
+        '<div class="item__order"></div>' +
+        '<img class="item__thumb" alt="" src="https://i.ytimg.com/vi/' + esc(t.youtube_id) + '/mqdefault.jpg">' +
+        '<div class="item__body"><div class="item__cat">Lagu ' + (idx + 1) + '</div><h3 class="item__title">' + esc(t.title) + '</h3>' +
+        '<p class="item__desc">' + esc(t.artist || '') + '</p>' +
+        '<div class="item__meta"><span class="badge' + (t.start_seconds ? ' badge--live' : '') + '">Mulai ' + fmtTime(t.start_seconds) + '</span></div></div>' +
+        '<div class="item__actions"></div>';
+      var order = el.querySelector('.item__order');
+      order.appendChild(orderBtn('up', 'Naikkan', idx === 0, function () { move('music_tracks', state.tracks, idx, -1); }));
+      order.appendChild(orderBtn('down', 'Turunkan', idx === state.tracks.length - 1, function () { move('music_tracks', state.tracks, idx, 1); }));
+      var act = el.querySelector('.item__actions');
+      act.appendChild(textBtn('Edit', 'btn btn--line btn--sm', function () { openTrackForm(t); }));
+      act.appendChild(textBtn('Hapus', 'btn btn--danger btn--sm', function () { removeTrack(t); }));
+      list.appendChild(el);
+    });
+  }
+  function openTrackForm(t) {
+    openForm(t ? 'Edit lagu' : 'Tambah lagu',
+      field('f_title', 'Judul lagu', { req: true, val: t && t.title, ph: 'Contoh: Sepanjang Hidup' }) +
+      field('f_artist', 'Penyanyi / keterangan', { val: t && t.artist, ph: 'Contoh: Maher Zain, cover ...' }) +
+      field('f_yt', 'Link YouTube', { req: true, val: t ? 'https://youtu.be/' + t.youtube_id : '', ph: 'https://www.youtube.com/watch?v=...', hint: 'Boleh tempel link biasa atau ID videonya.' }) +
+      field('f_start', 'Mulai dari', { val: t ? fmtTime(t.start_seconds) : '0:00', ph: '1:57', hint: 'Menit:detik (1:57) atau detik saja (117). Kosongkan untuk dari awal.' }),
+      function () {
+        var title = $('#f_title').value; need(title, 'Judul wajib diisi.');
+        var yt = parseYoutubeId($('#f_yt').value);
+        var start = parseTime($('#f_start').value);
+        var payload = { title: title.trim(), artist: $('#f_artist').value.trim() || null, youtube_id: yt, start_seconds: start };
+        var q = t ? sb.from('music_tracks').update(payload).eq('id', t.id) : sb.from('music_tracks').insert(Object.assign({ sort_order: state.tracks.length + 1 }, payload));
+        return q.then(function (r) { if (r.error) throw r.error; toast(t ? 'Lagu diperbarui.' : 'Lagu ditambahkan.'); loadMusic(); });
+      });
+  }
+  function removeTrack(t) {
+    confirmDialog('Hapus lagu?', '"' + t.title + '" akan dihapus dari pemutar.').then(function (ok) {
+      if (!ok) return;
+      sb.from('music_tracks').delete().eq('id', t.id).then(function (r) {
+        if (r.error) { toast('Gagal menghapus: ' + r.error.message, 'error'); return; }
+        toast('Lagu dihapus.'); loadMusic();
+      });
+    });
+  }
+  $('#addTrack').addEventListener('click', function () { openTrackForm(null); });
   function loadFacts() {
     skeleton($('#factList'));
     sb.from('profile_facts').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }).then(function (r) {
@@ -483,7 +572,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
       var bad = rs.filter(function (r) { return r.error; })[0];
       if (bad) { toast('Gagal mengubah urutan: ' + bad.error.message, 'error'); }
       else toast('Urutan disimpan.');
-      table === 'projects' ? loadProjects() : table === 'profile_facts' ? loadFacts() : loadAchievements();
+      table === 'projects' ? loadProjects() : table === 'profile_facts' ? loadFacts() : table === 'music_tracks' ? loadMusic() : loadAchievements();
     });
   }
 
