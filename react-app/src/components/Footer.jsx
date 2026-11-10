@@ -26,6 +26,13 @@ export default function Footer() {
         </div>
         <div className="footer__line">
           <span>Waffir Hasan Alkamiil. Dari Subang, Jawa Barat. &copy; {year}</span>
+          <nav className="footer__nav" aria-label="Pintasan">
+            <a href="#tentang" className="cursor-target">Tentang</a>
+            <a href="#skills" className="cursor-target">Stack</a>
+            <a href="#proyek" className="cursor-target">Proyek</a>
+            <a href="#layanan" className="cursor-target">Layanan</a>
+            <a href="#kontak" className="cursor-target">Kontak</a>
+          </nav>
           <span className="footer__links">
             <a href="https://github.com/wafiir051-ai" target="_blank" rel="noopener noreferrer" className="cursor-target">
               GitHub

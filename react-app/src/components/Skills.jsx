@@ -1,11 +1,14 @@
+import { HugeiconsIcon } from '@hugeicons/react'
+import { BrowserIcon, Database01Icon, CpuIcon, Wrench01Icon } from '@hugeicons/core-free-icons'
 import CursorGrid from './reactbits/CursorGrid/CursorGrid'
+import SectionHead from './SectionHead'
 import { usePrefs } from '../hooks/usePrefs'
 
 const STACK = [
-  ['Frontend', ['React', 'Next.js', 'Vite', 'Flutter', 'Tailwind CSS']],
-  ['Backend dan data', ['Supabase', 'PostgreSQL', 'Node.js', 'Python / FastAPI']],
-  ['Hardware dan IoT', ['ESP32', 'Arduino', 'Integrasi sensor', 'Firmware']],
-  ['Perkakas', ['Git dan GitHub', 'Vercel', 'Figma']],
+  [BrowserIcon, 'Frontend', ['React', 'Next.js', 'Vite', 'Flutter', 'Tailwind CSS']],
+  [Database01Icon, 'Backend dan data', ['Supabase', 'PostgreSQL', 'Node.js', 'Python / FastAPI']],
+  [CpuIcon, 'Hardware dan IoT', ['ESP32', 'Arduino', 'Integrasi sensor', 'Firmware']],
+  [Wrench01Icon, 'Perkakas', ['Git dan GitHub', 'Vercel', 'Figma']],
 ]
 
 export default function Skills() {
@@ -13,19 +16,26 @@ export default function Skills() {
 
   const content = (
     <div className="sc-wrap stack">
-      <div className="stack__head" data-sc-in>
-        <h2 className="display">Alat yang saya pakai tiap hari.</h2>
-      </div>
-      <div className="ledger" data-sc-in data-sc-stagger="70">
-        {STACK.map(([group, items]) => (
-          <div className="ledger__row" key={group}>
-            <h3 className="label">{group}</h3>
-            <ul className="ledger__items">
+      <SectionHead
+        label="Stack"
+        title="Alat yang saya pakai tiap hari."
+        intro="Dari antarmuka sampai papan sirkuit, supaya satu orang bisa membawa proyek dari ide sampai jalan."
+      />
+      <div className="panels" data-sc-in data-sc-stagger="70">
+        {STACK.map(([icon, group, items]) => (
+          <article className="panel" key={group}>
+            <h3 className="panel__head">
+              <span className="panel__icon">
+                <HugeiconsIcon icon={icon} size={20} strokeWidth={1.7} />
+              </span>
+              {group}
+            </h3>
+            <ul className="chips">
               {items.map((i) => (
                 <li key={i}>{i}</li>
               ))}
             </ul>
-          </div>
+          </article>
         ))}
       </div>
     </div>

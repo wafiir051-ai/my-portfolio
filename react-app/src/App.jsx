@@ -9,6 +9,7 @@ import Services from './components/Services'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 import CyberBot from './components/CyberBot'
+import BackgroundAudio from './components/BackgroundAudio'
 import TargetCursor from './components/reactbits/TargetCursor/TargetCursor'
 import { useScrollCraft } from './hooks/useScrollCraft'
 import { usePrefs } from './hooks/usePrefs'
@@ -32,6 +33,7 @@ export default function App() {
           hideDefaultCursor
         />
       )}
+      <div className="scrollbar" data-sc-progress aria-hidden="true" />
       <Nav />
       <Hero />
       <main>
@@ -43,6 +45,7 @@ export default function App() {
       </main>
       <Footer />
       <CyberBot />
+      <BackgroundAudio />
     </>
   )
 }

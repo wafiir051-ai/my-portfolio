@@ -230,6 +230,9 @@ export default function Projects() {
             </a>
           </div>
         </div>
+        <div className="rack__bar" aria-hidden="true">
+          <span />
+        </div>
       </div>
     </section>
   )
