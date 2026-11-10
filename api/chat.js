@@ -15,7 +15,40 @@ async function getAge() {
     return null;
   }
 }
-const buatPrompt = (AGE) => `Kamu adalah Astra, robot asisten di portofolio Waffir.
+// Prestasi diambil dari tabel achievements, jadi yang ditambah, diubah, atau
+// dihapus di /admin langsung ikut dijawab Astra. Gagal ambil: pakai teks bawaan.
+async function getAchievements() {
+  try {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_ANON_KEY;
+    const r = await fetch(
+      `${url}/rest/v1/achievements?select=title,note,year&order=sort_order.asc&limit=20`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!r.ok) return null;
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) return null;
+    return rows;
+  } catch {
+    return null;
+  }
+}
+
+const bagianPrestasiBawaan = `PRESTASI: Terbaik 1 (juara 1) Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek, bersama Tim Hadroh SMPIT Insan Mandiri Greenville, pada tahun 2025 saat Waffir kelas 9 (SMP). Sebutkan ini kalau pengunjung bertanya soal prestasi, lomba, atau hadroh; jangan menambah detail lain (nilai, jumlah peserta, nama lomba lain) yang tidak tertulis di sini.
+LOMBA LKS: Waffir lolos LKS (Lomba Kompetensi Siswa) sampai tingkat kabupaten, mewakili Kab. Subang, bidang Robot Bergerak Otonom (Autonomous Mobile Robotics), tahun 2026. Ia tidak juara di LKS dan tidak lolos ke tingkat provinsi; jangan mengaku ia menang atau lolos lebih jauh. Jangan menambah detail lain yang tidak tertulis di sini.`;
+
+function bagianPrestasi(rows) {
+  if (!rows) return bagianPrestasiBawaan;
+  const clip = (v, n) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+  const daftar = rows
+    .map((a) => `- ${clip(a.title, 200)}${a.note ? `. ${clip(a.note, 200)}` : ""}${a.year ? ` (${Number(a.year) || ""})` : ""}`)
+    .join("\n");
+  return `PRESTASI DAN LOMBA (daftar ini diambil langsung dari halaman prestasi di portofolio):
+${daftar}
+Sebutkan ini kalau pengunjung bertanya soal prestasi, lomba, atau penghargaan. Pakai kata persis seperti di daftar: jangan menyebut Waffir juara atau menang kalau tidak tertulis "juara", "terbaik", atau "menang", dan jangan menambah detail (nilai, jumlah peserta, tingkat, lomba lain) yang tidak tertulis.`;
+}
+
+const buatPrompt = (AGE, PRESTASI) => `Kamu adalah Astra, robot asisten di portofolio Waffir.
 Kamu adalah Astra, BUKAN Waffir. Jangan pernah mengaku sebagai Waffir; bicara tentang Waffir sebagai orang ketiga.
 Jawab dalam bahasa Indonesia yang santai, ramah, singkat (maks 4 kalimat).
 Hanya bahas tentang Waffir dan seputarnya. Jika di luar itu, arahkan kembali dengan sopan.
@@ -23,8 +56,7 @@ Jika pengunjung ingin membuat proyek serupa, beri gambaran umum singkat (kompone
 Jangan mengarang fakta yang tidak ada di bawah ini.
 
 PROFIL: Waffir, ${AGE} tahun, dari Subang, siswa SMKIT Assyifa Boarding School, Ketua Tim Robotika dan Ketua Hadroh di sekolahnya.
-PRESTASI: Terbaik 1 (juara 1) Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek, bersama Tim Hadroh SMPIT Insan Mandiri Greenville, pada tahun 2025 saat Waffir kelas 9 (SMP). Sebutkan ini kalau pengunjung bertanya soal prestasi, lomba, atau hadroh; jangan menambah detail lain (nilai, jumlah peserta, nama lomba lain) yang tidak tertulis di sini.
-LOMBA LKS: Waffir lolos LKS (Lomba Kompetensi Siswa) sampai tingkat kabupaten, mewakili Kab. Subang, bidang Robot Bergerak Otonom (Autonomous Mobile Robotics), tahun 2026. Ia tidak juara di LKS dan tidak lolos ke tingkat provinsi; jangan mengaku ia menang atau lolos lebih jauh. Jangan menambah detail lain yang tidak tertulis di sini.
+${PRESTASI}
 TEMPAT TINGGAL: Tempat tinggal asli (rumah) Waffir ada di Perumahan Mutiara Darussalam, Pitara, Kecamatan Pancoran Mas, Kota Depok, Jawa Barat, Indonesia. Jika pengunjung bertanya Waffir tinggal di mana, rumah aslinya di mana, atau alamatnya, jawab dengan alamat itu. Waffir bersekolah di SMKIT Assyifa Boarding School, Subang, dan di portofolio ia disebut berasal dari Subang; sebut ini hanya kalau relevan. Jangan menambah detail alamat di luar yang tertulis di sini (nomor rumah, RT/RW, kode pos, dan sebagainya tidak diketahui).
 SKILL: React, Flutter, Supabase, ESP32, IoT.
 PROYEK: Puspita Indah, EduSpace, Siroh Partner, Batik Nusantara, Wali Santri,
@@ -36,7 +68,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { message, history = [] } = req.body || {};
-  const AGE = (await getAge()) ?? "masih remaja";
+  const [umur, prestasi] = await Promise.all([getAge(), getAchievements()]);
+  const AGE = umur ?? "masih remaja";
   if (!message || typeof message !== "string" || message.length > 500)
     return res.status(400).json({ error: "Pesan tidak valid" });
 
@@ -56,7 +89,7 @@ module.exports = async function handler(req, res) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: buatPrompt(AGE) }] },
+          systemInstruction: { parts: [{ text: buatPrompt(AGE, bagianPrestasi(prestasi)) }] },
           contents,
           generationConfig: { maxOutputTokens: 800, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
         }),
