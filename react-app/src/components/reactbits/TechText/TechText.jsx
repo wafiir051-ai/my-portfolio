@@ -60,6 +60,7 @@ const TechText = ({
   intro = 'none',
   introDuration = 2,
   guides = false,
+  bleed = false,
   className = '',
   style
 }) => {
@@ -95,7 +96,8 @@ const TechText = ({
       clickKick,
       intro,
       introDuration,
-      guides
+      guides,
+      bleed
     };
     wakeRef.current();
   });
@@ -111,6 +113,13 @@ const TechText = ({
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     let width = 1;
     let height = 1;
+    // Area tata letak. Biasanya sama dengan kanvas; dengan `bleed`, kanvas dibiarkan
+    // lebih luas dari induknya dan kata hanya diletakkan di dalam kotak induk.
+    let lx = 0;
+    let ly = 0;
+    let lw = 1;
+    let lh = 1;
+    const bleedOn = bleed;
     let dpr = 1;
     let raf = 0;
     let last = performance.now();
@@ -212,6 +221,10 @@ const TechText = ({
         s.lineStyle,
         width,
         height,
+        lx,
+        ly,
+        lw,
+        lh,
         dpr
       ].join('|');
       if (key === layoutKey && word) return word;
@@ -227,19 +240,20 @@ const TechText = ({
       let m = probe.measureText(s.text);
       const fit = Math.min(
         1,
-        (width * 0.9) / Math.max(m.actualBoundingBoxLeft + m.actualBoundingBoxRight, 1),
-        (height * 0.66) / Math.max(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent, 1)
+        (lw * 0.9) / Math.max(m.actualBoundingBoxLeft + m.actualBoundingBoxRight, 1),
+        (lh * 0.66) / Math.max(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent, 1)
       );
       const size = s.fontSize * fit;
       setFont(probe, s, size);
       m = probe.measureText(s.text);
       const inkWidth = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
       const inkHeight = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
-      const margin = width * 0.05;
+      const margin = lw * 0.05;
       const start =
-        s.align === 'left' ? margin : s.align === 'right' ? width - margin - inkWidth : (width - inkWidth) / 2;
+        lx +
+        (s.align === 'left' ? margin : s.align === 'right' ? lw - margin - inkWidth : (lw - inkWidth) / 2);
       const x = start + m.actualBoundingBoxLeft;
-      const baseline = (height - inkHeight) / 2 + m.actualBoundingBoxAscent;
+      const baseline = ly + (lh - inkHeight) / 2 + m.actualBoundingBoxAscent;
       const xHeight = baseline - probe.measureText('x').actualBoundingBoxAscent;
       const capHeight = baseline - probe.measureText('H').actualBoundingBoxAscent;
       const ascender = baseline - probe.measureText('d').actualBoundingBoxAscent;
@@ -688,6 +702,18 @@ const TechText = ({
         sizeDirty = false;
         width = Math.max(1, container.clientWidth);
         height = Math.max(1, container.clientHeight);
+        const anchor = bleedOn ? container.parentElement : null;
+        if (anchor) {
+          lx = -container.offsetLeft;
+          ly = -container.offsetTop;
+          lw = Math.max(1, anchor.clientWidth);
+          lh = Math.max(1, anchor.clientHeight);
+        } else {
+          lx = 0;
+          ly = 0;
+          lw = width;
+          lh = height;
+        }
         dpr = Math.min(window.devicePixelRatio || 1, 2);
         const pixelWidth = Math.round(width * dpr);
         const pixelHeight = Math.round(height * dpr);
@@ -897,10 +923,13 @@ const TechText = ({
       const rect = container.getBoundingClientRect();
       pointer.x = e.clientX - rect.left;
       pointer.y = e.clientY - rect.top;
+      if (bleedOn) {
+        pointer.inside = pointer.x >= 0 && pointer.y >= 0 && pointer.x <= rect.width && pointer.y <= rect.height;
+      }
     };
     const onMove = e => {
       locate(e);
-      pointer.inside = true;
+      if (!bleedOn) pointer.inside = true;
       wake();
     };
     const onLeave = () => {
@@ -909,8 +938,9 @@ const TechText = ({
       wake();
     };
     const onDown = e => {
+      if (bleedOn && !visible) return;
       locate(e);
-      pointer.inside = true;
+      if (!bleedOn) pointer.inside = true;
       const s = settingsRef.current;
       const primary = e.pointerType !== 'mouse' || e.button === 0;
       const index = introducing || !primary ? -1 : glyphAt(pointer.x, pointer.y);
@@ -922,14 +952,19 @@ const TechText = ({
         dragging = index;
         grab.x = pointer.x - glyphs[index].offset.x;
         grab.y = pointer.y - glyphs[index].offset.y;
-        container.setPointerCapture?.(e.pointerId);
+        if (bleedOn) {
+          // Cegah blok teks terpilih saat kata diseret ke mana saja.
+          e.preventDefault();
+        } else {
+          container.setPointerCapture?.(e.pointerId);
+        }
       }
       wake();
     };
     const onUp = e => {
       if (dragging >= 0) {
         dragging = -1;
-        container.releasePointerCapture?.(e.pointerId);
+        if (!bleedOn) container.releasePointerCapture?.(e.pointerId);
         const rect = container.getBoundingClientRect();
         pointer.inside =
           e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
@@ -948,12 +983,22 @@ const TechText = ({
       wake();
     };
 
-    container.addEventListener('pointermove', onMove, { passive: true });
-    container.addEventListener('pointerenter', onMove, { passive: true });
-    container.addEventListener('pointerdown', onDown, { passive: true });
-    container.addEventListener('pointerup', onUp, { passive: true });
-    container.addEventListener('pointercancel', onUp, { passive: true });
-    container.addEventListener('pointerleave', onLeave, { passive: true });
+    // Dengan `bleed`, kanvas tidak menangkap pointer (supaya tautan di bawahnya tetap bisa
+    // diklik), jadi semua pointer dipantau di window dan huruf bisa dipegang di mana pun.
+    const target = bleedOn ? window : container;
+    target.addEventListener('pointermove', onMove, { passive: true });
+    target.addEventListener('pointerdown', onDown, { passive: !bleedOn });
+    target.addEventListener('pointerup', onUp, { passive: true });
+    target.addEventListener('pointercancel', onUp, { passive: true });
+    const onOut = e => {
+      if (!e.relatedTarget) onLeave();
+    };
+    if (bleedOn) {
+      window.addEventListener('pointerout', onOut, { passive: true });
+    } else {
+      container.addEventListener('pointerenter', onMove, { passive: true });
+      container.addEventListener('pointerleave', onLeave, { passive: true });
+    }
 
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(container);
@@ -983,11 +1028,12 @@ const TechText = ({
       themeObserver.disconnect();
       schemeQuery?.removeEventListener?.('change', wake);
       container.style.cursor = '';
-      container.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointerdown', onDown);
+      target.removeEventListener('pointerup', onUp);
+      target.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('pointerout', onOut);
       container.removeEventListener('pointerenter', onMove);
-      container.removeEventListener('pointerdown', onDown);
-      container.removeEventListener('pointerup', onUp);
-      container.removeEventListener('pointercancel', onUp);
       container.removeEventListener('pointerleave', onLeave);
     };
   }, []);

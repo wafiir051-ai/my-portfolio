@@ -234,13 +234,23 @@ main section[id],
 .hero {
   position: relative;
   min-height: max(100svh, 40rem);
-  overflow: clip;
+  /* Tidak dipotong ke bawah: huruf WAFFIR boleh diseret keluar dari hero. */
+  overflow-x: clip;
+  overflow-y: visible;
   isolation: isolate;
+  z-index: 5;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(16rem, 23rem);
   grid-template-rows: auto auto 1fr auto;
   column-gap: clamp(1.5rem, 5vw, 5rem);
   padding: calc(var(--topbar-h) + clamp(1rem, 4vh, 3rem)) var(--edge) 0;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: clip;
+  pointer-events: none;
 }
 .hero__flux {
   position: absolute;
@@ -2341,4 +2351,18 @@ main section[id],
   .brief__v {
     grid-column: 2;
   }
+}
+
+/* ---------- huruf WAFFIR tanpa batas ---------- */
+/* Kanvas dibuat jauh lebih luas dari kotak katanya (ke kiri, kanan, atas, dan bawah)
+   dan tidak menangkap pointer, jadi huruf bisa diseret ke mana saja tanpa terpotong. */
+.hero__mark .tech-text {
+  position: absolute;
+  left: calc(var(--edge) * -1);
+  right: calc(var(--edge) * -1);
+  top: -8rem;
+  bottom: -70vh;
+  width: auto;
+  height: auto;
+  pointer-events: none;
 }

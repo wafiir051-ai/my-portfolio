@@ -48,23 +48,25 @@ export default function Hero() {
   return (
     <header className="hero" id="top" data-sc-act="flow">
       {/* Lapisan 0: latar. Bergerak paling pelan. */}
-      {!reduce && (
-        <div className="hero__flux" data-sc-parallax="0.9" aria-hidden="true">
-          <FluxLines
-            colors={['#3ED8A8', '#1F8F70', '#0E4A3A']}
-            speed={0.3}
-            scale={1.4}
-            transparent={false}
-            backgroundColor="#0B1814"
-            opacity={0.7}
-            glow={0.4}
-            shimmer={0.3}
-            sharpness={3.5}
-            lineWidth={0.8}
-            mouseStrength={0.8}
-          />
-        </div>
-      )}
+      <div className="hero__bg" aria-hidden="true">
+        {!reduce && (
+          <div className="hero__flux" data-sc-parallax="0.9" aria-hidden="true">
+            <FluxLines
+              colors={['#3ED8A8', '#1F8F70', '#0E4A3A']}
+              speed={0.3}
+              scale={1.4}
+              transparent={false}
+              backgroundColor="#0B1814"
+              opacity={0.7}
+              glow={0.4}
+              shimmer={0.3}
+              sharpness={3.5}
+              lineWidth={0.8}
+              mouseStrength={0.8}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Lapisan 1: kata besar, di belakang kartu dan di depan latar. */}
       <div className="hero__mark" data-sc-parallax="-1.6" aria-hidden="true">
@@ -80,6 +82,7 @@ export default function Hero() {
             labels={!narrow}
             specks={narrow ? 6 : 15}
             reach={narrow ? 120 : 200}
+            bleed
           />
         )}
       </div>
