@@ -1027,7 +1027,7 @@ main section[id],
 .facts {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1rem;
   margin: 0;
   padding: 0;
@@ -1926,7 +1926,7 @@ main section[id],
 
 /* Kartu fakta, lalu daftar prestasi dengan gambar bukti */
 .facts {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 @media (max-width: 1100px) {
   .facts {
@@ -2365,4 +2365,23 @@ main section[id],
   width: auto;
   height: auto;
   pointer-events: none;
+}
+
+/* Jumlah kotak fakta ganjil: yang terakhir melebar penuh di tampilan dua kolom. */
+@media (max-width: 1100px) {
+  .facts__tile:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 420px) {
+  .facts__tile:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
+/* Enam kotak fakta di layar lebar: tiga kolom, dua baris. */
+@media (min-width: 1101px) {
+  .facts__tile {
+    grid-column: span 2;
+  }
 }
