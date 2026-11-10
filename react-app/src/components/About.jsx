@@ -8,7 +8,7 @@ const FACTS = [
   [School01Icon, 'Sekolah', 'SMKIT Assyifa Boarding School, kelas 11'],
   [UserGroupIcon, 'Peran', 'Ketua Tim Robotika dan Ketua Hadroh sekolah'],
   [UserGroupIcon, 'Organisasi', 'Pernah jadi OSIS divisi kebersihan, SMPIT Insan Mandiri Greenville'],
-  [UserGroupIcon, 'Kepanitiaan', 'Anggota Danus (Dana Usaha) Asfera, Assyiffa Festival Raya'],
+  [UserGroupIcon, 'Kepanitiaan', 'Pernah jadi anggota Danus (Dana Usaha) di acara Asfera, Assyiffa Festival Raya'],
   [CodeIcon, 'Fokus', 'Web, mobile, IoT'],
 ]
 
