@@ -43,6 +43,7 @@ export default function Skills() {
 
   return (
     <section className="sec stack-sec" id="skills" data-sc-act="flow">
+      <div className="drip drip--paper" aria-hidden="true" />
       {reduce || !fine ? (
         content
       ) : (

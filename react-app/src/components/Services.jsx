@@ -12,6 +12,7 @@ const SERVICES = [
 export default function Services() {
   return (
     <section className="sec sec--paper" id="layanan" data-sc-act="flow">
+      <div className="drip drip--dark" aria-hidden="true" />
       <div className="sc-wrap">
         <SectionHead label="Layanan" title="Yang bisa saya kerjakan." intro="Klik salah satu untuk langsung membahasnya." />
         <div className="services" data-sc-in data-sc-stagger="70">

@@ -13,6 +13,7 @@ const FACTS = [
 export default function About() {
   return (
     <section className="sec sec--paper" id="tentang" data-sc-act="flow">
+      <div className="drip drip--dark" aria-hidden="true" />
       <div className="sc-wrap about">
         <SectionHead label="Profil" title="Pelajar SMK yang sudah memegang proyek klien." />
         <div className="about__copy" data-sc-in data-sc-stagger="70">

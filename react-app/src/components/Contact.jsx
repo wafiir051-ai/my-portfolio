@@ -20,6 +20,7 @@ export default function Contact() {
 
   return (
     <section className="sec contact" id="kontak" data-sc-act="flow">
+      <div className="drip drip--paper" aria-hidden="true" />
       {!reduce && (
         <div className="contact__bed" aria-hidden="true">
           <Ferrofluid

@@ -2176,3 +2176,59 @@ main section[id],
 .contact__pad {
   bottom: 2rem;
 }
+
+/* ---------- lelehan es krim di perbatasan hijau dan putih ---------- */
+:root {
+  --drip-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 120'%3E%3Cpath d='M0 0H720V12H0ZM33 10H47V37H33ZM31 37a9 9 0 1 1 18 0a9 9 0 1 1 -18 0ZM21 12Q33 12 33 26V12ZM59 12Q47 12 47 26V12ZM100 10H120V79H100ZM97 79a13 13 0 1 1 26 0a13 13 0 1 1 -26 0ZM88 12Q100 12 100 26V12ZM132 12Q120 12 120 26V12ZM184 10H196V26H184ZM182 26a8 8 0 1 1 16 0a8 8 0 1 1 -16 0ZM172 12Q184 12 184 26V12ZM208 12Q196 12 196 26V12ZM253 10H271V58H253ZM250 58a12 12 0 1 1 24 0a12 12 0 1 1 -24 0ZM241 12Q253 12 253 26V12ZM283 12Q271 12 271 26V12ZM328 10H352V89H328ZM325 89a15 15 0 1 1 30 0a15 15 0 1 1 -30 0ZM316 12Q328 12 328 26V12ZM364 12Q352 12 352 26V12ZM414 10H426V32H414ZM412 32a8 8 0 1 1 16 0a8 8 0 1 1 -16 0ZM402 12Q414 12 414 26V12ZM438 12Q426 12 426 26V12ZM472 10H488V51H472ZM469 51a11 11 0 1 1 22 0a11 11 0 1 1 -22 0ZM460 12Q472 12 472 26V12ZM500 12Q488 12 488 26V12ZM537 10H559V72H537ZM534 72a14 14 0 1 1 28 0a14 14 0 1 1 -28 0ZM525 12Q537 12 537 26V12ZM571 12Q559 12 559 26V12ZM614 10H626V30H614ZM612 30a8 8 0 1 1 16 0a8 8 0 1 1 -16 0ZM602 12Q614 12 614 26V12ZM638 12Q626 12 626 26V12ZM667 10H685V45H667ZM665 45a11 11 0 1 1 22 0a11 11 0 1 1 -22 0ZM655 12Q667 12 667 26V12ZM697 12Q685 12 685 26V12Z' fill='black' fill-rule='nonzero'/%3E%3C/svg%3E");
+}
+.drip {
+  position: absolute;
+  z-index: 2;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: clamp(3.5rem, 7vw, 6.5rem);
+  background: var(--drip-color);
+  -webkit-mask: var(--drip-mask) repeat-x 0 0 / auto 100%;
+  mask: var(--drip-mask) repeat-x 0 0 / auto 100%;
+  transform-origin: 50% 0;
+  pointer-events: none;
+  animation: drip-melt 7s ease-in-out infinite;
+}
+.drip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  height: 68%;
+  -webkit-mask: var(--drip-mask) repeat-x 310px 0 / auto 100%;
+  mask: var(--drip-mask) repeat-x 310px 0 / auto 100%;
+  transform-origin: 50% 0;
+  animation: drip-melt 9s ease-in-out -3s infinite;
+}
+.drip--dark {
+  --drip-color: #081410;
+}
+.drip--paper {
+  --drip-color: #e6efe8;
+}
+@keyframes drip-melt {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.14);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drip,
+  .drip::after {
+    animation: none;
+  }
+}
+.sec,
+.stack-sec,
+.contact {
+  position: relative;
+}
