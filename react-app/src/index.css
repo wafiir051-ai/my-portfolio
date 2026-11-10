@@ -1914,29 +1914,42 @@ main section[id],
   }
 }
 
-/* Lima kartu fakta: satu baris di layar lebar, tiga lalu dua di tablet */
+/* Empat kartu fakta, lalu satu kartu prestasi selebar baris */
 .facts {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .facts__tile--award {
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1.25rem;
   border-color: color-mix(in oklab, var(--sc-accent) 60%, transparent);
   background: color-mix(in oklab, var(--sc-accent) 9%, var(--sc-surface));
 }
-@media (max-width: 1199px) {
-  .facts {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.facts__tile--award .facts__icon {
+  margin: 0;
+  width: 3.25rem;
+  height: 3.25rem;
 }
-@media (max-width: 720px) {
+.facts__award {
+  display: grid;
+  gap: 0.3rem;
+}
+.facts__note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--sc-ink-soft);
+}
+@media (max-width: 1100px) {
   .facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .facts__tile--award {
-    grid-column: 1 / -1;
   }
 }
 @media (max-width: 420px) {
   .facts {
+    grid-template-columns: 1fr;
+  }
+  .facts__tile--award {
     grid-template-columns: 1fr;
   }
 }

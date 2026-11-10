@@ -7,8 +7,12 @@ const FACTS = [
   [School01Icon, 'Sekolah', 'SMKIT Assyifa Boarding School, kelas 11'],
   [UserGroupIcon, 'Peran', 'Ketua Tim Robotika sekolah'],
   [CodeIcon, 'Fokus', 'Web, mobile, IoT'],
-  [TrophyIcon, 'Prestasi', 'Juara 1 hadroh, SMA IT Buahati Annual Fest', true],
 ]
+
+const AWARD = {
+  title: 'Terbaik 1 Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek',
+  note: 'Bersama Tim Hadroh SMPIT Insan Mandiri Greenville',
+}
 
 export default function About() {
   return (
@@ -26,8 +30,8 @@ export default function About() {
           </p>
         </div>
         <dl className="facts" data-sc-in data-sc-stagger="60">
-          {FACTS.map(([icon, k, v, award]) => (
-            <div className={`facts__tile ${award ? 'facts__tile--award' : ''}`} key={k}>
+          {FACTS.map(([icon, k, v]) => (
+            <div className="facts__tile" key={k}>
               <span className="facts__icon">
                 <HugeiconsIcon icon={icon} size={20} strokeWidth={1.7} />
               </span>
@@ -35,6 +39,16 @@ export default function About() {
               <dd>{v}</dd>
             </div>
           ))}
+          <div className="facts__tile facts__tile--award">
+            <span className="facts__icon">
+              <HugeiconsIcon icon={TrophyIcon} size={20} strokeWidth={1.7} />
+            </span>
+            <div className="facts__award">
+              <dt className="label">Prestasi</dt>
+              <dd>{AWARD.title}</dd>
+              <p className="facts__note">{AWARD.note}</p>
+            </div>
+          </div>
         </dl>
       </div>
     </section>
