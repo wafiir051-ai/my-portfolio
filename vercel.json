@@ -3,5 +3,6 @@
   "framework": null,
   "installCommand": "npm --prefix react-app install",
   "buildCommand": "npm --prefix react-app run build",
-  "outputDirectory": "react-app/dist"
+  "outputDirectory": "react-app/dist",
+  "cleanUrls": true
 }
