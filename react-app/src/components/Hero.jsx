@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
+import { fetchProfileCard } from '../lib/projectsApi'
 import FluxLines from './reactbits/FluxLines/FluxLines'
 import TechText from './reactbits/TechText/TechText'
 import ProfileCard from './reactbits/ProfileCard/ProfileCard'
 import { useFontsReady, usePrefs } from '../hooks/usePrefs'
+
+// Dipakai selama tabel profile_card kosong atau belum dibuat.
+const CARD_FALLBACK = {
+  name: 'Waffir Hasan Alkamiil',
+  title: 'Full-Stack & IoT Developer',
+  handle: 'wafiir051-ai',
+  status: 'Terbuka untuk proyek',
+  photo: '/malioboro.jpg',
+}
 
 const ROLES = ['Full-Stack Developer', 'Mobile Developer (Flutter)', 'IoT & Hardware Engineer']
 
@@ -41,6 +51,16 @@ export default function Hero() {
   const { reduce, narrow } = usePrefs()
   const fontsReady = useFontsReady()
   const role = useTypewriter(!reduce)
+  const [card, setCard] = useState(CARD_FALLBACK)
+
+  useEffect(() => {
+    const ctrl = new AbortController()
+    fetchProfileCard(ctrl.signal).then(
+      (c) => c && setCard({ ...CARD_FALLBACK, ...c, photo: c.photo || CARD_FALLBACK.photo }),
+      () => {},
+    )
+    return () => ctrl.abort()
+  }, [])
 
   const toContact = () =>
     document.getElementById('kontak')?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' })
@@ -86,16 +106,16 @@ export default function Hero() {
           />
         )}
       </div>
-      <h1 className="sr-only">Waffir Hasan Alkamiil</h1>
+      <h1 className="sr-only">{card.name}</h1>
 
       {/* Lapisan 2: kartu. Memotong kata besar, jadi kedalamannya terbaca. */}
       <div className="hero__card" data-sc-parallax="0.5">
         <ProfileCard
-          avatarUrl="/malioboro.jpg"
-          name="Waffir Hasan Alkamiil"
-          title="Full-Stack & IoT Developer"
-          handle="wafiir051-ai"
-          status="Terbuka untuk proyek"
+          avatarUrl={card.photo}
+          name={card.name}
+          title={card.title}
+          handle={card.handle}
+          status={card.status}
           statusColor="#3ED8A8"
           contactText="Hubungi"
           onContactClick={toContact}

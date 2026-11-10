@@ -61,3 +61,23 @@ export async function fetchProfileFacts(signal) {
     icon: String(f.icon || 'grup'),
   }))
 }
+
+// Kartu profil di hero dari tabel `profile_card` (satu baris, diisi lewat admin.html).
+// Mengembalikan null kalau tabel kosong atau belum dibuat, supaya situs memakai isi bawaan.
+export async function fetchProfileCard(signal) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/profile_card?select=*&id=eq.1`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    signal,
+  })
+  if (!res.ok) throw new Error(`Status ${res.status}`)
+  const rows = await res.json()
+  const c = Array.isArray(rows) ? rows[0] : null
+  if (!c) return null
+  return {
+    name: String(c.name || ''),
+    title: String(c.title || ''),
+    handle: String(c.handle || ''),
+    status: String(c.status || ''),
+    photo: typeof c.photo_url === 'string' && c.photo_url.trim() ? c.photo_url.trim() : '',
+  }
+}

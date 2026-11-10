@@ -199,9 +199,11 @@ dialog[open]{animation:dlg .22s var(--ease)}
 
     <section id="panel-facts" role="tabpanel" aria-labelledby="tab-facts" hidden>
       <div class="head">
-        <div><h1>Profil</h1><p>Kotak fakta di bagian Tentang: lokasi, sekolah, peran, organisasi, dan lainnya. Astra juga ikut membacanya.</p></div>
+        <div><h1>Profil</h1><p>Kartu foto di hero dan kotak fakta di bagian Tentang (lokasi, sekolah, peran, dan lainnya). Astra ikut membaca kotak faktanya.</p></div>
         <div class="tools"><button class="btn btn--primary" id="addFact" type="button">+ Tambah kotak</button></div>
       </div>
+      <div id="cardSetup" hidden></div>
+      <div class="list" id="cardBox" style="margin-bottom:1.5rem"></div>
       <div id="factSetup" hidden></div>
       <div class="list" id="factList"></div>
     </section>
@@ -238,11 +240,12 @@ dialog[open]{animation:dlg .22s var(--ease)}
   var SETUP_SQL = "-- Tabel prestasi untuk portofolio + bucket gambar, dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n--\n-- PENTING (keamanan): policy tulis di bawah memakai peran \"authenticated\", yaitu\n-- siapa pun yang punya akun di project ini. Matikan pendaftaran publik di\n-- Authentication > Sign In / Providers > \"Allow new users to sign up\", supaya\n-- hanya akunmu yang bisa login ke /admin.\n\ncreate table if not exists public.achievements (\n  id uuid primary key default gen_random_uuid(),\n  title text not null,\n  note text,\n  year integer,\n  image_url text,\n  sort_order integer not null default 999,\n  created_at timestamptz not null default now()\n);\n\nalter table public.achievements enable row level security;\n\ndrop policy if exists \"achievements read\" on public.achievements;\ncreate policy \"achievements read\" on public.achievements\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"achievements insert\" on public.achievements;\ncreate policy \"achievements insert\" on public.achievements\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"achievements update\" on public.achievements;\ncreate policy \"achievements update\" on public.achievements\n  for update to authenticated using (true) with check (true);\n\ndrop policy if exists \"achievements delete\" on public.achievements;\ncreate policy \"achievements delete\" on public.achievements\n  for delete to authenticated using (true);\n\n-- Bucket gambar prestasi (publik dibaca, hanya admin yang menulis).\ninsert into storage.buckets (id, name, public)\nvalues ('achievements', 'achievements', true)\non conflict (id) do update set public = true;\n\ndrop policy if exists \"achievements files read\" on storage.objects;\ncreate policy \"achievements files read\" on storage.objects\n  for select to anon, authenticated using (bucket_id = 'achievements');\n\ndrop policy if exists \"achievements files insert\" on storage.objects;\ncreate policy \"achievements files insert\" on storage.objects\n  for insert to authenticated with check (bucket_id = 'achievements');\n\ndrop policy if exists \"achievements files update\" on storage.objects;\ncreate policy \"achievements files update\" on storage.objects\n  for update to authenticated using (bucket_id = 'achievements') with check (bucket_id = 'achievements');\n\ndrop policy if exists \"achievements files delete\" on storage.objects;\ncreate policy \"achievements files delete\" on storage.objects\n  for delete to authenticated using (bucket_id = 'achievements');\n\n-- Isi awal: prestasi hadroh dan LKS (gambarnya sudah ada di situs).\ninsert into public.achievements (title, note, year, image_url, sort_order)\nselect v.title, v.note, v.year, v.image_url, v.sort_order\nfrom (values\n  ('Terbaik 1 Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek',\n   'Saat kelas 9, bersama Tim Hadroh SMPIT Insan Mandiri Greenville',\n   2025, '/prestasi/hadroh-baf-2025.webp', 1),\n  ('Peserta LKS Tingkat Provinsi Jawa Barat 2026, bidang Robot Bergerak Otonom',\n   'Mewakili Kab. Subang, 10 sampai 11 Juni 2026 di SMK Negeri 1 Karawang',\n   2026, '/prestasi/lks-jabar-2026.jpg', 2)\n) as v(title, note, year, image_url, sort_order)\nwhere not exists (select 1 from public.achievements);\n";
   var FACTS_SQL = "-- Kotak fakta di bagian Tentang (lokasi, sekolah, peran, dan seterusnya), dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n-- Aman dijalankan ulang: tabel dan isi awal tidak digandakan.\n\ncreate table if not exists public.profile_facts (\n  id uuid primary key default gen_random_uuid(),\n  label text not null,\n  value text not null,\n  icon text not null default 'grup',\n  sort_order integer not null default 999,\n  created_at timestamptz not null default now()\n);\n\nalter table public.profile_facts enable row level security;\n\ndrop policy if exists \"profile_facts read\" on public.profile_facts;\ncreate policy \"profile_facts read\" on public.profile_facts\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"profile_facts insert\" on public.profile_facts;\ncreate policy \"profile_facts insert\" on public.profile_facts\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"profile_facts update\" on public.profile_facts;\ncreate policy \"profile_facts update\" on public.profile_facts\n  for update to authenticated using (true) with check (true);\n\ndrop policy if exists \"profile_facts delete\" on public.profile_facts;\ncreate policy \"profile_facts delete\" on public.profile_facts\n  for delete to authenticated using (true);\n\n-- Isi awal: sama dengan yang tampil sekarang. Hanya diisi kalau tabel masih kosong.\ninsert into public.profile_facts (label, value, icon, sort_order)\nselect v.label, v.value, v.icon, v.sort_order\nfrom (values\n  ('Lokasi', 'Subang, Jawa Barat', 'lokasi', 1),\n  ('Sekolah', 'SMKIT Assyifa Boarding School, kelas 11', 'sekolah', 2),\n  ('Peran', 'Ketua IT Club dan Ketua Hadroh sekolah', 'grup', 3),\n  ('Organisasi', 'Pernah jadi OSIS divisi kebersihan, SMPIT Insan Mandiri Greenville', 'grup', 4),\n  ('Kepanitiaan', 'Pernah jadi anggota Danus (Dana Usaha) di acara Asfera, Assyiffa Festival Raya', 'grup', 5),\n  ('Fokus', 'Web, mobile, IoT', 'kode', 6)\n) as v(label, value, icon, sort_order)\nwhere not exists (select 1 from public.profile_facts);\n";
   var FACT_ICONS = [['lokasi', 'Lokasi (pin)'], ['sekolah', 'Sekolah'], ['grup', 'Orang / organisasi'], ['kode', 'Kode'], ['piala', 'Penghargaan'], ['buku', 'Buku'], ['bintang', 'Bintang'], ['kerja', 'Pekerjaan'], ['tanggal', 'Kalender'], ['topi', 'Topi wisuda']];
+  var CARD_SQL = "-- Kartu profil di hero (foto, nama, judul, handle, status), dikelola lewat /admin.\n-- Jalankan sekali di Supabase: SQL Editor > New query > paste > Run.\n-- Aman dijalankan ulang. Foto yang diunggah memakai bucket \"achievements\"\n-- (dari achievements.sql), jadi jalankan file itu lebih dulu.\n\ncreate table if not exists public.profile_card (\n  id integer primary key default 1 check (id = 1),\n  name text not null,\n  title text not null,\n  handle text,\n  status text,\n  photo_url text,\n  updated_at timestamptz not null default now()\n);\n\nalter table public.profile_card enable row level security;\n\ndrop policy if exists \"profile_card read\" on public.profile_card;\ncreate policy \"profile_card read\" on public.profile_card\n  for select to anon, authenticated using (true);\n\ndrop policy if exists \"profile_card insert\" on public.profile_card;\ncreate policy \"profile_card insert\" on public.profile_card\n  for insert to authenticated with check (true);\n\ndrop policy if exists \"profile_card update\" on public.profile_card;\ncreate policy \"profile_card update\" on public.profile_card\n  for update to authenticated using (true) with check (true);\n\n-- Isi awal: sama dengan kartu yang tampil sekarang.\ninsert into public.profile_card (id, name, title, handle, status, photo_url)\nvalues (1, 'Waffir Hasan Alkamiil', 'Full-Stack & IoT Developer', 'wafiir051-ai', 'Terbuka untuk proyek', '/malioboro.jpg')\non conflict (id) do nothing;\n";
   var BUCKET = 'achievements';
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
-  var state = { tab: 'projects', projects: [], achievements: [], facts: [], q: '', achievementsMissing: false };
+  var state = { tab: 'projects', projects: [], achievements: [], facts: [], card: null, q: '', achievementsMissing: false };
 
   function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function safeUrl(u) { return /^https?:\/\//i.test(u || '') || (u || '').charAt(0) === '/' ? u : ''; }
@@ -302,7 +305,7 @@ dialog[open]{animation:dlg .22s var(--ease)}
   $('#search').addEventListener('input', function (e) { state.q = e.target.value.toLowerCase(); renderProjects(); });
 
   /* ---------- data ---------- */
-  function loadAll() { loadProjects(); loadAchievements(); loadFacts(); }
+  function loadAll() { loadProjects(); loadAchievements(); loadFacts(); loadCard(); }
   function skeleton(el) { el.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>'; }
 
   function loadProjects() {
@@ -321,6 +324,33 @@ dialog[open]{animation:dlg .22s var(--ease)}
   function isMissing(err, table) {
     var m = err.message || '';
     return err.code === 'PGRST205' || err.code === '42P01' || (m.indexOf(table) !== -1 && /(schema cache|does not exist)/.test(m));
+  }
+  function loadCard() {
+    sb.from('profile_card').select('*').eq('id', 1).then(function (r) {
+      var setup = $('#cardSetup');
+      if (r.error) {
+        $('#cardBox').innerHTML = '';
+        if (isMissing(r.error, 'profile_card')) setupNotice(setup, 'kartu profil', CARD_SQL);
+        else $('#cardBox').innerHTML = '<div class="empty"><strong>Gagal memuat kartu profil</strong>' + esc(r.error.message) + '</div>';
+        return;
+      }
+      setup.hidden = true;
+      state.card = r.data[0] || null; renderCard();
+    });
+  }
+  function renderCard() {
+    var c = state.card || { name: 'Waffir Hasan Alkamiil', title: 'Full-Stack & IoT Developer', handle: 'wafiir051-ai', status: 'Terbuka untuk proyek', photo_url: '/malioboro.jpg' };
+    var box = $('#cardBox'); box.innerHTML = '';
+    var el = document.createElement('article'); el.className = 'item item--thumb';
+    var src = safeUrl(c.photo_url) || '/malioboro.jpg';
+    el.innerHTML =
+      '<div class="item__order"></div><img class="item__thumb" alt="" src="' + esc(src) + '">' +
+      '<div class="item__body"><div class="item__cat">Kartu di hero</div><h3 class="item__title">' + esc(c.name) + '</h3>' +
+      '<p class="item__desc">' + esc(c.title) + '</p>' +
+      '<div class="item__meta"><span class="badge">@' + esc(c.handle || '') + '</span><span class="badge badge--live">' + esc(c.status || '') + '</span></div></div>' +
+      '<div class="item__actions"></div>';
+    el.querySelector('.item__actions').appendChild(textBtn('Edit kartu', 'btn btn--line btn--sm', function () { openCardForm(c); }));
+    box.appendChild(el);
   }
   function loadFacts() {
     skeleton($('#factList'));
@@ -528,6 +558,43 @@ dialog[open]{animation:dlg .22s var(--ease)}
     });
   }
   $('#addProject').addEventListener('click', function () { openProjectForm(null); });
+
+  /* ---------- kartu profil di hero ---------- */
+  function openCardForm(c) {
+    img = { file: null, remove: false, current: c.photo_url || '' };
+    openForm('Edit kartu profil',
+      field('f_name', 'Nama', { req: true, val: c.name }) +
+      field('f_title', 'Judul di bawah nama', { req: true, val: c.title, ph: 'Full-Stack & IoT Developer' }) +
+      field('f_handle', 'Handle', { val: c.handle, ph: 'wafiir051-ai', hint: 'Tanpa tanda @.' }) +
+      field('f_status', 'Status', { val: c.status, ph: 'Terbuka untuk proyek' }) +
+      '<div class="field"><span class="label">Foto</span><div class="preview" id="imgBox"></div>' +
+      '<span class="hint">Foto tegak (potret) paling pas. JPG, PNG, atau WebP; otomatis dikecilkan.</span></div>',
+      function () {
+        var name = $('#f_name').value, title = $('#f_title').value;
+        need(name, 'Nama wajib diisi.'); need(title, 'Judul wajib diisi.');
+        var finalUrl = img.remove ? '' : img.current;
+        var step = Promise.resolve();
+        if (img.file) {
+          step = resizeToWebp(img.file, 1200).then(function (blob) {
+            var path = 'profile/' + (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + '.webp';
+            return sb.storage.from(BUCKET).upload(path, blob, { contentType: 'image/webp', upsert: false }).then(function (r) {
+              if (r.error) throw new Error('Gagal mengunggah foto: ' + r.error.message);
+              finalUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+            });
+          });
+        }
+        return step.then(function () {
+          var payload = { id: 1, name: name.trim(), title: title.trim(), handle: $('#f_handle').value.trim().replace(/^@/, '') || null, status: $('#f_status').value.trim() || null, photo_url: finalUrl || null, updated_at: new Date().toISOString() };
+          return sb.from('profile_card').upsert(payload).then(function (r) {
+            if (r.error) throw r.error;
+            var old = c.photo_url || '';
+            if (old && old !== finalUrl) deleteFileFor(old);
+            toast('Kartu profil diperbarui.'); loadCard();
+          });
+        });
+      });
+    drawImgBox();
+  }
 
   /* ---------- profil (kotak fakta) ---------- */
   function openFactForm(f) {
