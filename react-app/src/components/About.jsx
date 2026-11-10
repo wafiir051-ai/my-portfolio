@@ -1,18 +1,14 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Location01Icon, School01Icon, UserGroupIcon, CodeIcon, TrophyIcon } from '@hugeicons/core-free-icons'
+import { Location01Icon, School01Icon, UserGroupIcon, CodeIcon } from '@hugeicons/core-free-icons'
 import SectionHead from './SectionHead'
+import Achievements from './Achievements'
 
 const FACTS = [
   [Location01Icon, 'Lokasi', 'Subang, Jawa Barat'],
   [School01Icon, 'Sekolah', 'SMKIT Assyifa Boarding School, kelas 11'],
-  [UserGroupIcon, 'Peran', 'Ketua Tim Robotika sekolah'],
+  [UserGroupIcon, 'Peran', 'Ketua Tim Robotika dan Ketua Hadroh sekolah'],
   [CodeIcon, 'Fokus', 'Web, mobile, IoT'],
 ]
-
-const AWARD = {
-  title: 'Terbaik 1 Festival Hadroh BAF (Buahati Annual Fest) tingkat Jabodetabek',
-  note: '2025, saat kelas 9, bersama Tim Hadroh SMPIT Insan Mandiri Greenville',
-}
 
 export default function About() {
   return (
@@ -25,7 +21,7 @@ export default function About() {
             klien, sistem informasi sekolah, platform afiliasi, dan alat IoT berbasis ESP32.
           </p>
           <p className="body">
-            Saya juga memimpin Tim Robotika di sekolah dan ikut lomba teknologi tingkat daerah. Sekarang saya mulai
+            Saya juga memimpin Tim Robotika dan Hadroh di sekolah, dan ikut lomba teknologi sampai tingkat provinsi. Sekarang saya mulai
             menerima proyek lepas, dari website sampai alat IoT, dan menemani sampai selesai.
           </p>
         </div>
@@ -39,17 +35,10 @@ export default function About() {
               <dd>{v}</dd>
             </div>
           ))}
-          <div className="facts__tile facts__tile--award">
-            <span className="facts__icon">
-              <HugeiconsIcon icon={TrophyIcon} size={20} strokeWidth={1.7} />
-            </span>
-            <div className="facts__award">
-              <dt className="label">Prestasi</dt>
-              <dd>{AWARD.title}</dd>
-              <p className="facts__note">{AWARD.note}</p>
-            </div>
-          </div>
         </dl>
+        <div className="about__awards">
+          <Achievements />
+        </div>
       </div>
     </section>
   )

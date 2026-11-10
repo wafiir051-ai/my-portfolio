@@ -24,3 +24,22 @@ export async function fetchProjects(signal) {
     }
   })
 }
+
+// Prestasi dari tabel `achievements` (diisi lewat admin.html). Mengembalikan null
+// kalau tabel kosong atau belum dibuat, supaya situs memakai prestasi bawaan.
+export async function fetchAchievements(signal) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/achievements?select=*&order=sort_order.asc,created_at.asc`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    signal,
+  })
+  if (!res.ok) throw new Error(`Status ${res.status}`)
+  const rows = await res.json()
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  return rows.map((a) => ({
+    id: String(a.id),
+    title: String(a.title || ''),
+    note: String(a.note || ''),
+    year: a.year ? Number(a.year) : null,
+    image: typeof a.image_url === 'string' && a.image_url.trim() ? a.image_url.trim() : '',
+  }))
+}
