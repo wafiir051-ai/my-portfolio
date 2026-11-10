@@ -11,7 +11,7 @@ const sectionData = {
   },
   tentang: {
     badge: 'INFO DEVELOPER',
-    text: 'Waffir adalah pelajar SMK & Ketua Tim Robotika asal Subang!',
+    text: 'Waffir adalah pelajar SMK & Ketua IT Club asal Subang!',
     expr: 'expr-normal',
     waving: false
   },

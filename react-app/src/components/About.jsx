@@ -6,7 +6,7 @@ import Achievements from './Achievements'
 const FACTS = [
   [Location01Icon, 'Lokasi', 'Subang, Jawa Barat'],
   [School01Icon, 'Sekolah', 'SMKIT Assyifa Boarding School, kelas 11'],
-  [UserGroupIcon, 'Peran', 'Ketua Tim Robotika dan Ketua Hadroh sekolah'],
+  [UserGroupIcon, 'Peran', 'Ketua IT Club dan Ketua Hadroh sekolah'],
   [UserGroupIcon, 'Organisasi', 'Pernah jadi OSIS divisi kebersihan, SMPIT Insan Mandiri Greenville'],
   [UserGroupIcon, 'Kepanitiaan', 'Pernah jadi anggota Danus (Dana Usaha) di acara Asfera, Assyiffa Festival Raya'],
   [CodeIcon, 'Fokus', 'Web, mobile, IoT'],
@@ -24,7 +24,7 @@ export default function About() {
             klien, sistem informasi sekolah, platform afiliasi, dan alat IoT berbasis ESP32.
           </p>
           <p className="body">
-            Saya juga memimpin Tim Robotika dan Hadroh di sekolah, dan pernah ikut LKS sampai tingkat kabupaten. Sekarang saya mulai
+            Saya juga memimpin IT Club sekolah (divisi cyber security, game dev, web dev, dan robotika) dan Hadroh, serta pernah ikut LKS sampai tingkat kabupaten. Sekarang saya mulai
             menerima proyek lepas, dari website sampai alat IoT, dan menemani sampai selesai.
           </p>
         </div>
