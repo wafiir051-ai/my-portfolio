@@ -168,9 +168,14 @@
 
 .profile-card__photo {
   position: absolute;
-  inset: calc(var(--pc-parallax) * -1);
-  width: calc(100% + var(--pc-parallax) * 2);
-  height: calc(100% + var(--pc-parallax) * 2);
+  /* Foto dilebihkan melewati tepi kotak (parallax + cadangan 16px) supaya tidak ada celah
+     saat kartu dimiringkan atau fotonya bergeser mengikuti pointer. */
+  inset: calc((var(--pc-parallax) + 16px) * -1);
+  width: calc(100% + (var(--pc-parallax) + 16px) * 2);
+  height: calc(100% + (var(--pc-parallax) + 16px) * 2);
+  /* scrollcraft memberi img { max-width: 100% }, yang menyempitkan foto dan memunculkan celah di kanan. */
+  max-width: none;
+  max-height: none;
   object-fit: cover;
   object-position: center bottom;
   transform: translate3d(var(--pc-shift-x), var(--pc-shift-y), 0);
